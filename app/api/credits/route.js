@@ -1,6 +1,6 @@
 import Razorpay from 'razorpay'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { supabaseAdmin } from '../../../lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { CREDIT_PACKS } from '../../../lib/agents'
 
 const razorpay = new Razorpay({
@@ -14,14 +14,21 @@ export async function POST(req) {
     const pack = CREDIT_PACKS.find(p => p.id === packId)
     if (!pack || pack.price === 0) return Response.json({ error: 'Invalid pack' }, { status: 400 })
 
-    const sb = createRouteHandlerClient({ cookies })
-    const { data: { user } } = await sb.auth.getUser()
-    if (!user) return Response.json({ error: 'Unauthorised' }, { status: 401 })
+    // Auth via bearer token
+    const token = req.headers.get('authorization')?.replace('Bearer ', '')
+    if (!token) return Response.json({ error: 'Unauthorised' }, { status: 401 })
+
+    const sb = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    )
+    const { data: { user }, error } = await sb.auth.getUser(token)
+    if (error || !user) return Response.json({ error: 'Unauthorised' }, { status: 401 })
 
     const order = await razorpay.orders.create({
-      amount: pack.price,
+      amount: pack.price, // already in paise e.g. 49900 = ₹499
       currency: 'INR',
-      notes: { user_id: user.id, pack_id: packId, credits: pack.credits }
+      notes: { user_id: user.id, pack_id: packId, credits: String(pack.credits) }
     })
 
     return Response.json({ orderId: order.id, amount: pack.price, currency: 'INR', pack })

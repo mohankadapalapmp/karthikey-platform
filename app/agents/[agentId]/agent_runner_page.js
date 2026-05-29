@@ -188,29 +188,12 @@ export default function AgentRunnerPage() {
       }
 
       const reply = json.reply
+      const scores = json.scores || null
       historyRef.current.push({ role: 'assistant', content: reply })
 
-      // Extract JSON scores if present — multiple patterns
-      let scores = null
-      const patterns = [
-        /```json\s*(\{"scores":\s*\[[\s\S]*?\]\s*\})\s*```/,
-        /(\{"scores":\s*\[[\s\S]*?\]\s*\})/,
-      ]
-      for (const pattern of patterns) {
-        const match = reply.match(pattern)
-        if (match) {
-          try {
-            const parsed = JSON.parse(match[1] || match[0])
-            if (parsed.scores?.length) {
-              scores = parsed.scores
-              setResults(parsed.scores)
-              break
-            }
-          } catch (_) {}
-        }
-      }
+      // Scores come pre-parsed from the API
+      if (scores?.length) setResults(scores)
 
-      // Clean the text and add message
       addMsg('agent', reply, scores)
       setCredits(c => c - agent.credits)
     } catch (e) {

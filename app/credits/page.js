@@ -8,17 +8,18 @@ import { useRouter } from 'next/navigation'
 export default function CreditsPage() {
   const router = useRouter()
   const [user, setUser] = useState(null)
+  const [session, setSession] = useState(null)
   const [credits, setCredits] = useState(0)
   const [loading, setLoading] = useState(null)
   const [success, setSuccess] = useState('')
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data?.user) { router.push('/login'); return }
-      setUser(data.user)
-      supabase.from('accounts').select('credits').eq('id', data.user.id).single().then(({ data: acc }) => {
-        if (acc) setCredits(acc.credits)
-      })
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data?.session) { router.push('/login'); return }
+      setUser(data.session.user)
+      setSession(data.session)
+      supabase.from('accounts').select('credits').eq('id', data.session.user.id).single()
+        .then(({ data: acc }) => { if (acc) setCredits(acc.credits) })
     })
   }, [])
 
@@ -27,22 +28,33 @@ export default function CreditsPage() {
     setLoading(pack.id)
     try {
       const res = await fetch('/api/credits', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({ packId: pack.id })
       })
-      const { orderId, amount, currency } = await res.json()
+      const json = await res.json()
+      if (json.error) { alert('Error: ' + json.error); return }
+
+      const { orderId, amount, currency } = json
 
       const rzp = new window.Razorpay({
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount, currency,
+        amount,      // in paise — ₹499 = 49900
+        currency,
         order_id: orderId,
         name: 'Karthikey AI Platform',
-        description: `${pack.credits} credits pack`,
-        prefill: { email: user?.email },
+        description: `${pack.credits} credits — ${pack.name} pack`,
+        prefill: { email: user?.email }, // only email, no phone
         theme: { color: '#0D1B3E' },
         handler: () => {
           setSuccess(`✅ Payment successful! ${pack.credits} credits will appear in your account shortly.`)
           setTimeout(() => router.push('/agents'), 3000)
+        },
+        modal: {
+          ondismiss: () => setLoading(null)
         }
       })
       rzp.open()
