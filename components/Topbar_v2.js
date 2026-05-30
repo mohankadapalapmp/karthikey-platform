@@ -23,23 +23,15 @@ export default function Topbar() {
     return () => listener.subscription.unsubscribe()
   }, [])
 
-  const [org, setOrg] = useState(null)
-
   async function fetchProfile(uid) {
-    const [{ data: acc }, { data: orgMember }] = await Promise.all([
-      supabase.from('accounts').select('credits, full_name, company').eq('id', uid).single(),
-      supabase.from('org_members').select('role, organisations(id, name, slug, credits)').eq('user_id', uid).eq('status', 'active').single()
-    ])
-    if (acc) { setCredits(acc.credits); setProfile(acc) }
-    if (orgMember?.organisations) setOrg(orgMember.organisations)
+    const { data } = await supabase.from('accounts').select('credits, full_name, company').eq('id', uid).single()
+    if (data) { setCredits(data.credits); setProfile(data) }
   }
 
   async function signOut() {
     await supabase.auth.signOut()
     window.location.href = '/'
   }
-
-  const orgCredits = org?.credits ?? null
 
   const initials = profile?.full_name
     ? profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -91,13 +83,6 @@ export default function Topbar() {
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
         {user ? (
           <>
-            {/* Org badge */}
-            {org && (
-              <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 500, color: '#C9A84C' }}>
-                {org.name}
-              </div>
-            )}
-
             {/* Credits pill */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: 6,
@@ -112,7 +97,7 @@ export default function Topbar() {
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <path d="M6 1L7.5 4.5L11 5L8.5 7.5L9 11L6 9.5L3 11L3.5 7.5L1 5L4.5 4.5L6 1Z" fill="#C9A84C"/>
               </svg>
-              {org ? (orgCredits ?? '…') : (credits ?? '…')} {org ? 'org credits' : 'credits'}
+              {credits ?? '…'} credits
             </div>
 
             <Link href="/credits" style={{
