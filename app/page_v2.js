@@ -42,12 +42,12 @@ export default function Home() {
           </div>
         </section>
 
-        <section style={{ background: 'var(--bg)', padding: '32px 24px' }}>
-          <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+        <section style={{ padding: '0 24px', marginTop: -24 }}>
+          <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
             {stats.map(s => (
-              <div key={s.label} style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 12, padding: '20px 20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-                <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--navy)', letterSpacing: '-0.02em' }}>{s.val}</div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 5 }}>{s.label}</div>
+              <div key={s.label} style={{ background: 'var(--white)', border: '0.5px solid #E5E7EB', borderRadius: 12, padding: '18px 20px', textAlign: 'center' }}>
+                <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--navy)' }}>{s.val}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>{s.label}</div>
               </div>
             ))}
           </div>
