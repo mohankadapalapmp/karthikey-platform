@@ -37,60 +37,114 @@ export default function Topbar() {
     ? profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : user?.email?.[0]?.toUpperCase() || 'K'
 
-  const navLink = (href, label) => (
-    <Link href={href} style={{
-      fontSize: 13, color: pathname === href ? '#C9A84C' : '#8FA3C8',
-      padding: '4px 10px', fontWeight: pathname === href ? 500 : 400,
-      borderBottom: pathname === href ? '2px solid #C9A84C' : '2px solid transparent',
-      paddingBottom: 6
-    }}>{label}</Link>
-  )
+  const isActive = (href) => pathname === href || pathname?.startsWith(href + '/')
 
   return (
-    <nav style={{ background: 'var(--navy)', padding: '0 24px', display: 'flex', alignItems: 'center', gap: 12, height: 56, position: 'sticky', top: 0, zIndex: 100, borderBottom: '0.5px solid #2E4070' }}>
-      <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, marginRight: 8 }}>
-        <div style={{ width: 32, height: 32, background: '#C9A84C', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 16, color: '#0D1B3E' }}>K</div>
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#C9A84C', letterSpacing: '0.05em' }}>KARTHIKEY</div>
-          <div style={{ fontSize: 10, color: '#8FA3C8', letterSpacing: '0.03em' }}>AI Agent Platform</div>
-        </div>
+    <nav style={{
+      background: '#0D1B3E',
+      borderBottom: '1px solid #1E2F5A',
+      height: 56,
+      display: 'flex',
+      alignItems: 'center',
+      padding: '0 28px',
+      gap: 0,
+      position: 'sticky',
+      top: 0,
+      zIndex: 100,
+    }}>
+      {/* Logo */}
+      <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, marginRight: 32 }}>
+        <div style={{ width: 30, height: 30, background: '#C9A84C', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, color: '#0D1B3E', letterSpacing: '-0.02em' }}>K</div>
+        <span style={{ fontSize: 14, fontWeight: 600, color: '#C9A84C', letterSpacing: '0.04em' }}>KARTHIKEY</span>
       </Link>
 
+      {/* Nav links */}
       {user && (
-        <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          {navLink('/agents', 'Agents')}
-          {navLink('/dashboard', 'Dashboard')}
+        <div style={{ display: 'flex', gap: 2 }}>
+          {[['/', 'Home'], ['/agents', 'Agents'], ['/dashboard', 'Dashboard']].map(([href, label]) => (
+            <Link key={href} href={href} style={{
+              fontSize: 13.5,
+              fontWeight: 500,
+              color: isActive(href) ? '#fff' : '#8FA3C8',
+              padding: '6px 12px',
+              borderRadius: 6,
+              background: isActive(href) ? 'rgba(255,255,255,0.08)' : 'transparent',
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { if (!isActive(href)) e.target.style.color = '#C8D8EF' }}
+            onMouseLeave={e => { if (!isActive(href)) e.target.style.color = '#8FA3C8' }}>
+              {label}
+            </Link>
+          ))}
         </div>
       )}
 
+      {/* Right side */}
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
         {user ? (
           <>
-            <div style={{ background: '#1A2848', border: '0.5px solid #2E4070', borderRadius: 20, padding: '4px 12px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#C9A84C' }}>
-              ⚡ {credits ?? '…'} credits
+            {/* Credits pill */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'rgba(201,168,76,0.12)',
+              border: '1px solid rgba(201,168,76,0.25)',
+              borderRadius: 20,
+              padding: '4px 12px',
+              fontSize: 13,
+              fontWeight: 500,
+              color: '#C9A84C',
+            }}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M6 1L7.5 4.5L11 5L8.5 7.5L9 11L6 9.5L3 11L3.5 7.5L1 5L4.5 4.5L6 1Z" fill="#C9A84C"/>
+              </svg>
+              {credits ?? '…'} credits
             </div>
-            <Link href="/credits" style={{ background: '#C9A84C', color: '#0D1B3E', padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600 }}>+ Buy</Link>
 
-            {/* Profile avatar with dropdown */}
-            <div style={{ position: 'relative' }} className="profile-menu">
-              <Link href="/profile" title={profile?.full_name || user.email} style={{
-                width: 34, height: 34, borderRadius: '50%', background: '#C9A84C',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 13, fontWeight: 700, color: '#0D1B3E', textDecoration: 'none',
-                border: pathname === '/profile' ? '2px solid white' : '2px solid transparent'
-              }}>
-                {initials}
-              </Link>
-            </div>
+            <Link href="/credits" style={{
+              background: '#C9A84C',
+              color: '#0D1B3E',
+              padding: '5px 12px',
+              borderRadius: 6,
+              fontSize: 12.5,
+              fontWeight: 600,
+              letterSpacing: '-0.01em',
+              transition: 'background 0.15s',
+            }}>
+              + Buy
+            </Link>
 
-            <button onClick={signOut} style={{ background: 'transparent', border: 'none', color: '#8FA3C8', fontSize: 12, cursor: 'pointer', padding: '4px 6px' }}>
+            {/* Avatar */}
+            <Link href="/profile" title={profile?.full_name || user.email} style={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              background: pathname === '/profile' ? '#C9A84C' : 'rgba(201,168,76,0.2)',
+              border: pathname === '/profile' ? '2px solid #C9A84C' : '1.5px solid rgba(201,168,76,0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 12,
+              fontWeight: 700,
+              color: pathname === '/profile' ? '#0D1B3E' : '#C9A84C',
+              textDecoration: 'none',
+              transition: 'all 0.15s',
+            }}>
+              {initials}
+            </Link>
+
+            <button onClick={signOut} style={{
+              background: 'transparent', border: 'none',
+              color: '#8FA3C8', fontSize: 12.5, cursor: 'pointer',
+              padding: '4px 8px', borderRadius: 4,
+              transition: 'color 0.15s',
+            }}>
               Sign out
             </button>
           </>
         ) : (
           <>
-            <Link href="/login" style={{ fontSize: 13, color: '#8FA3C8', padding: '4px 10px' }}>Login</Link>
-            <Link href="/login?signup=1" style={{ background: '#C9A84C', color: '#0D1B3E', padding: '6px 14px', borderRadius: 6, fontSize: 13, fontWeight: 600 }}>Get started free</Link>
+            <Link href="/login" style={{ fontSize: 13.5, color: '#8FA3C8', padding: '6px 12px', fontWeight: 500 }}>Login</Link>
+            <Link href="/login?signup=1" style={{ background: '#C9A84C', color: '#0D1B3E', padding: '6px 16px', borderRadius: 6, fontSize: 13.5, fontWeight: 600 }}>Get started free</Link>
           </>
         )}
       </div>

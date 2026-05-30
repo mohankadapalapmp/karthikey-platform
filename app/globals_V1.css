@@ -1,0 +1,113 @@
+:root {
+  --navy: #0D1B3E;
+  --gold: #C9A84C;
+  --gold-light: #E8C76A;
+  --slate: #1A2848;
+  --slate2: #2A3A5C;
+  --muted: #8FA3C8;
+  --border: #2E4070;
+  --bg: #F4F6FB;
+  --white: #FFFFFF;
+  --text: #1A1A2E;
+  --text-muted: #64748B;
+  --success: #107C41;
+  --warning: #B45309;
+  --danger: #DC2626;
+  --purple: #6D28D9;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+a { color: inherit; text-decoration: none; }
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  outline: none;
+}
+
+.btn-primary {
+  background: var(--navy);
+  color: var(--gold);
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--slate); }
+
+.btn-gold {
+  background: var(--gold);
+  color: var(--navy);
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+}
+.btn-gold:hover { background: var(--gold-light); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-muted);
+  border: 0.5px solid #D1D5DB;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+.btn-outline:hover { background: #F9FAFB; }
+
+.card {
+  background: var(--white);
+  border: 0.5px solid #E5E7EB;
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+.badge-built   { background: #E1F5EE; color: #085041; }
+.badge-quick   { background: #FAEEDA; color: #633806; }
+.badge-adv     { background: #EEEDFE; color: #3C3489; }
+.badge-gold    { background: var(--navy); color: var(--gold); }
+.badge-hot     { background: #FEF2E7; color: #92400E; }
+.badge-warm    { background: #EFF6FF; color: #1E40AF; }
+.badge-cold    { background: #F1F5F9; color: #475569; }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+
+.page-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
