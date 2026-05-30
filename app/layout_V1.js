@@ -1,5 +1,4 @@
 import './globals.css'
-import MonitoringInit from './MonitoringInit'
 
 export const metadata = {
   title: 'Karthikey – AI Agent Platform',
@@ -9,10 +8,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
-        <MonitoringInit />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   )
 }

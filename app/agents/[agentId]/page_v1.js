@@ -6,8 +6,6 @@ import { AGENTS } from '../../../lib/agents'
 import Topbar from '../../../components/Topbar'
 import Link from 'next/link'
 import * as XLSX from 'xlsx'
-import { track, Events } from '../../../lib/analytics'
-import { captureError } from '../../../lib/monitoring'
 
 const BATCH_SIZE = 25
 const SCORE_AGENT_IDS = ['lead-qual','lead-score','case-class','sentiment',
@@ -107,7 +105,6 @@ export default function AgentRunnerPage() {
       const rows = XLSX.utils.sheet_to_json(ws, { defval: '' })
       if (rows.length) {
         setColumns(Object.keys(rows[0])); setData(rows); setStep('ready')
-        track(Events.FILE_UPLOADED, { rows: rows.length, cols: Object.keys(rows[0]).length })
         addMsg('agent', `✅ Loaded **${rows.length} records** with ${Object.keys(rows[0]).length} columns.\n\n${rows.length > BATCH_SIZE ? `📦 Large dataset detected — use "Score all ${rows.length} records" to process in batches of ${BATCH_SIZE}. This ensures every record gets scored.` : `Ready to analyse. Try a quick action or ask me anything.`}`)
       }
     }
@@ -143,7 +140,6 @@ export default function AgentRunnerPage() {
     }
     setBatchLoading(true)
     setBatchProgress({ current: 0, total: totalBatches })
-    track(Events.BATCH_SCORE, { agentId, rows: data.length, batches: totalBatches, credits: creditCost })
     addMsg('user', `Score all ${data.length} records`)
     addMsg('agent', `🔄 Starting batch processing — ${totalBatches} batch${totalBatches > 1 ? 'es' : ''} of up to ${BATCH_SIZE} records each. This will cost ${creditCost} credit${creditCost > 1 ? 's' : ''}...`)
 
@@ -173,7 +169,6 @@ export default function AgentRunnerPage() {
     if (credits < agent.credits) { addMsg('agent', `⚠️ Not enough credits. Please top up.`); return }
     addMsg('user', text)
     historyRef.current.push({ role: 'user', content: text })
-    track(Events.AGENT_RUN, { agentId, agent: agent.name, dept: agent.dept })
     setLoading(true)
     try {
       const res = await fetch('/api/agent', {
@@ -196,7 +191,6 @@ export default function AgentRunnerPage() {
   }
 
   function exportExcel() {
-    track(Events.EXPORT_SCORES, { agentId, rows: results?.length })
     if (!results) return
     const ws = XLSX.utils.json_to_sheet(results)
     const wb = XLSX.utils.book_new()

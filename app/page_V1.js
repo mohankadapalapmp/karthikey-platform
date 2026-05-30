@@ -80,7 +80,7 @@ export default function Home() {
         </section>
 
         <footer style={{ textAlign: 'center', padding: '24px', fontSize: 13, color: 'var(--text-muted)' }}>
-          © 2026 Karthikey Intelligence Solutions · Bengaluru · marketing@karthikey.in
+          © 2025 Karthikey Intelligence Solutions · Bengaluru · marketing@karthikey.in
         </footer>
       </main>
     </>
