@@ -15,12 +15,10 @@ export default function LoginForm() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const isTeam = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('type') === 'team'
-
   useEffect(() => {
     if (params.get('signup') === '1') setIsSignup(true)
     supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) router.push(params.get('type') === 'team' ? '/org/create' : '/agents')
+      if (data?.user) router.push('/agents')
     })
   }, [])
 
@@ -34,8 +32,7 @@ export default function LoginForm() {
         if (data.user) {
           await supabase.from('accounts').upsert({ id: data.user.id, email, full_name: name, credits: 5 })
           setSuccess('Account created! Redirecting…')
-          const dest = params.get('type') === 'team' ? '/org/create' : '/agents'
-          setTimeout(() => router.push(dest), 1200)
+          setTimeout(() => router.push('/agents'), 1200)
         }
       } else {
         const { error: err } = await supabase.auth.signInWithPassword({ email, password })
@@ -50,9 +47,7 @@ export default function LoginForm() {
   }
 
   async function handleGoogle() {
-    const type = params.get('type')
-    const dest = type === 'team' ? '/org/create' : '/agents'
-    await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}${dest}` } })
+    await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/agents` } })
   }
 
   return (
@@ -68,7 +63,7 @@ export default function LoginForm() {
       <div className="card" style={{ width: '100%', maxWidth: 400 }}>
         <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 6 }}>{isSignup ? 'Create your account' : 'Welcome back'}</h1>
         <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 24 }}>
-          {isSignup ? (isTeam ? 'Create your account — then set up your team' : 'Get 5 free credits — no card needed') : 'Sign in to your Karthikey account'}
+          {isSignup ? 'Get 5 free credits — no card needed' : 'Sign in to your Karthikey account'}
         </p>
 
         <button onClick={handleGoogle} className="btn-outline" style={{ width: '100%', padding: '10px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>

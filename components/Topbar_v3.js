@@ -69,7 +69,7 @@ export default function Topbar() {
       {/* Nav links */}
       {user && (
         <div style={{ display: 'flex', gap: 2 }}>
-          {[['/', 'Home'], ['/agents', 'Agents'], ['/dashboard', 'Dashboard'], ['/pricing', 'Pricing']].map(([href, label]) => (
+          {[['/', 'Home'], ['/agents', 'Agents'], ['/dashboard', 'Dashboard']].map(([href, label]) => (
             <Link key={href} href={href} style={{
               fontSize: 13.5,
               fontWeight: 500,
@@ -93,14 +93,9 @@ export default function Topbar() {
           <>
             {/* Org badge */}
             {org && (
-              <Link href={`/org/${org.slug}`} style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 6, padding: '3px 10px', fontSize: 11.5, fontWeight: 500, color: '#C9A84C', textDecoration: 'none' }}>
+              <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 500, color: '#C9A84C' }}>
                 {org.name}
-              </Link>
-            )}
-            {!org && (
-              <Link href="/org/create" style={{ fontSize: 12, color: '#8FA3C8', padding: '4px 8px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.1)' }}>
-                + Create team
-              </Link>
+              </div>
             )}
 
             {/* Credits pill */}
@@ -163,8 +158,6 @@ export default function Topbar() {
           </>
         ) : (
           <>
-            <Link href="/pricing" style={{ fontSize: 13.5, color: '#8FA3C8', padding: '6px 12px', fontWeight: 500 }}>Pricing</Link>
-            <Link href="/login?signup=1&type=team" style={{ fontSize: 13.5, color: '#8FA3C8', padding: '6px 12px', fontWeight: 500 }}>For teams</Link>
             <Link href="/login" style={{ fontSize: 13.5, color: '#8FA3C8', padding: '6px 12px', fontWeight: 500 }}>Login</Link>
             <Link href="/login?signup=1" style={{ background: '#C9A84C', color: '#0D1B3E', padding: '6px 16px', borderRadius: 6, fontSize: 13.5, fontWeight: 600 }}>Get started free</Link>
           </>
