@@ -85,53 +85,28 @@ export async function POST(req) {
     const rowCount = data?.length || 0
     const creditCost = calcCredits(agent, rowCount)
 
-    // ── Credit priority logic ─────────────────────────────────
-    // Priority 1: Org the user was INVITED to (employer org)
-    // Priority 2: Org the user created themselves
-    // Priority 3: Personal credits
-    // Fallback: Personal credits if org is empty
-
-    const { data: orgMembers } = await supabaseAdmin
+    // ── Check if user belongs to an org ──────────────────────
+    const { data: orgMember } = await supabaseAdmin
       .from('org_members')
-      .select('org_id, role, invited_email, organisations(id, name, slug, credits, owner_id)')
+      .select('org_id, role, organisations(id, name, credits)')
       .eq('user_id', user.id)
       .eq('status', 'active')
+      .single()
 
-    // Find employer org (invited_email set = was invited by someone else)
-    // vs own org (owner_id = user.id)
-    let activeOrg = null
-    if (orgMembers?.length) {
-      // Prefer org user was invited to over org they created
-      const invitedOrg = orgMembers.find(m => m.invited_email && m.organisations?.owner_id !== user.id)
-      const ownOrg = orgMembers.find(m => m.organisations?.owner_id === user.id)
-      // Use invited org first if it has credits, else own org, else personal
-      if (invitedOrg?.organisations?.credits >= creditCost) {
-        activeOrg = invitedOrg
-      } else if (ownOrg?.organisations?.credits >= creditCost) {
-        activeOrg = ownOrg
-      } else if (invitedOrg) {
-        activeOrg = invitedOrg // still set for logging, will fall back to personal
-      } else if (ownOrg) {
-        activeOrg = ownOrg
-      }
-    }
-
-    const orgId = activeOrg?.org_id || null
-    const orgCredits = activeOrg?.organisations?.credits || 0
-    const useOrgCredits = !!orgId && orgCredits >= creditCost
-
-    // Get personal credits for fallback check
-    const { data: acc } = await supabaseAdmin.from('accounts').select('credits').eq('id', user.id).single()
-    const personalCredits = acc?.credits || 0
+    const useOrgCredits = !!orgMember?.org_id
+    const orgId = orgMember?.org_id || null
+    const orgCredits = orgMember?.organisations?.credits || 0
 
     // ── Credit check ──────────────────────────────────────────
-    if (!useOrgCredits && personalCredits < creditCost) {
-      const orgMsg = orgId && orgCredits < creditCost
-        ? ` Your org has ${orgCredits} credits — ask your admin to top up.`
-        : ''
-      return Response.json({
-        error: `Insufficient credits. Need ${creditCost}, you have ${personalCredits} personal credits.${orgMsg}`
-      }, { status: 402 })
+    if (useOrgCredits) {
+      if (orgCredits < creditCost) {
+        return Response.json({ error: `Insufficient org credits. Need ${creditCost}, org has ${orgCredits}. Ask your admin to top up.` }, { status: 402 })
+      }
+    } else {
+      const { data: acc } = await supabaseAdmin.from('accounts').select('credits').eq('id', user.id).single()
+      if (!acc || acc.credits < creditCost) {
+        return Response.json({ error: `Insufficient credits. Need ${creditCost}, you have ${acc?.credits || 0}.` }, { status: 402 })
+      }
     }
 
     let scores = null
@@ -167,11 +142,10 @@ export async function POST(req) {
 
     // ── Deduct credits ────────────────────────────────────────
     if (useOrgCredits) {
-      // Deduct from org pool
       await supabaseAdmin.from('organisations').update({ credits: orgCredits - creditCost }).eq('id', orgId)
     } else {
-      // Fall back to personal credits
-      await supabaseAdmin.from('accounts').update({ credits: personalCredits - creditCost }).eq('id', user.id)
+      const { data: acc } = await supabaseAdmin.from('accounts').select('credits').eq('id', user.id).single()
+      await supabaseAdmin.from('accounts').update({ credits: acc.credits - creditCost }).eq('id', user.id)
     }
 
     // ── Log usage ─────────────────────────────────────────────
@@ -181,7 +155,7 @@ export async function POST(req) {
       org_id: orgId
     })
 
-    return Response.json({ reply: cleanReply, scores, creditCost, totalRows: rowCount, usedOrgCredits: useOrgCredits, remainingCredits: useOrgCredits ? orgCredits - creditCost : personalCredits - creditCost })
+    return Response.json({ reply: cleanReply, scores, creditCost, totalRows: rowCount, orgCredits: useOrgCredits ? orgCredits - creditCost : null })
   } catch (err) {
     console.error(err)
     return Response.json({ error: err.message }, { status: 500 })

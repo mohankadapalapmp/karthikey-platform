@@ -26,18 +26,12 @@ export default function Topbar() {
   const [org, setOrg] = useState(null)
 
   async function fetchProfile(uid) {
-    const [{ data: acc }, { data: orgMembers }] = await Promise.all([
+    const [{ data: acc }, { data: orgMember }] = await Promise.all([
       supabase.from('accounts').select('credits, full_name, company').eq('id', uid).single(),
-      supabase.from('org_members').select('role, invited_email, organisations(id, name, slug, credits, owner_id)').eq('user_id', uid).eq('status', 'active')
+      supabase.from('org_members').select('role, organisations(id, name, slug, credits)').eq('user_id', uid).eq('status', 'active').single()
     ])
     if (acc) { setCredits(acc.credits); setProfile(acc) }
-    if (orgMembers?.length) {
-      // Same priority logic as API: invited org > own org
-      const invitedOrg = orgMembers.find(m => m.invited_email && m.organisations?.owner_id !== uid)
-      const ownOrg = orgMembers.find(m => m.organisations?.owner_id === uid)
-      const primary = invitedOrg || ownOrg
-      if (primary?.organisations) setOrg(primary.organisations)
-    }
+    if (orgMember?.organisations) setOrg(orgMember.organisations)
   }
 
   async function signOut() {
@@ -123,13 +117,7 @@ export default function Topbar() {
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <path d="M6 1L7.5 4.5L11 5L8.5 7.5L9 11L6 9.5L3 11L3.5 7.5L1 5L4.5 4.5L6 1Z" fill="#C9A84C"/>
               </svg>
-              {org
-                ? (orgCredits >= 0 ? orgCredits : '…')
-                : (credits ?? '…')
-              } {org
-                ? (orgCredits > 0 ? 'team credits' : 'team credits')
-                : 'credits'
-              }
+              {org ? (orgCredits ?? '…') : (credits ?? '…')} {org ? 'org credits' : 'credits'}
             </div>
 
             <Link href="/credits" style={{
