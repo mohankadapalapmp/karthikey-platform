@@ -72,7 +72,6 @@ export default function OrgDashboardPage() {
   async function sendInvite(e) {
     e.preventDefault()
     if (!inviteEmail.trim()) return
-    if (inviting) return
     setInviting(true); setError(''); setInviteLink('')
     try {
       const { data: invite, error: invErr } = await supabase
@@ -80,8 +79,7 @@ export default function OrgDashboardPage() {
         .insert({ org_id: org.id, email: inviteEmail.trim(), role: inviteRole, invited_by: user.id })
         .select().single()
       if (invErr) throw invErr
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
-      const link = `${baseUrl}/org/invite/${invite.token}`
+      const link = `${window.location.origin}/org/invite/${invite.token}`
       setInviteLink(link)
       setInviteEmail('')
       await loadOrgData(user.id)
