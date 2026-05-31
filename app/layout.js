@@ -9,6 +9,9 @@ export const metadata = {
   description: '52 pre-built AI agents for CRM and sales teams. Lead scoring, pipeline management, email drafting, forecasting and more. Works with any Excel or CRM data. Any industry. Start free.',
   keywords: ['AI agents', 'CRM automation', 'lead scoring AI', 'sales automation India', 'AI platform India', 'Karthikey AI', 'pipeline management AI', 'email drafting AI'],
   metadataBase: new URL('https://agents.karthikey.in'),
+  verification: {
+    google: 'uMPXPlaDhVvpYs5GxfMdCDtJE4a0Ce6LAqhK9nRscKU',
+  },
   openGraph: {
     siteName: 'Karthikey AI',
     type: 'website',
