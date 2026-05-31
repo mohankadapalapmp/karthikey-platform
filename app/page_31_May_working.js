@@ -1,78 +1,6 @@
 import Link from 'next/link'
 import Topbar from '../components/Topbar'
 
-export const metadata = {
-  title: 'Karthikey AI — 52 AI Agents for Sales & CRM Teams | Start Free',
-  description: '52 pre-built AI agents for CRM and sales teams. Lead scoring, pipeline management, email drafting, forecasting and more. Works with any Excel or CRM data. Any industry. 5 free credits — no card needed.',
-  keywords: ['AI agents for sales teams', 'CRM automation India', 'lead scoring AI', 'pipeline management AI', 'email drafting AI', 'sales automation', 'AI platform India', 'Karthikey AI'],
-  alternates: { canonical: 'https://agents.karthikey.in' },
-  openGraph: {
-    title: 'Karthikey AI — 52 AI Agents for Sales & CRM Teams',
-    description: '52 pre-built AI agents. Lead scoring, pipeline management, email drafting, forecasting. Any industry. Any CRM. Start free — 5 credits included.',
-    url: 'https://agents.karthikey.in',
-    type: 'website',
-  },
-  twitter: {
-    title: 'Karthikey AI — 52 AI Agents for Sales & CRM Teams',
-    description: '52 pre-built AI agents. Lead scoring, pipeline management, email drafting. Any industry. Start free.',
-  },
-}
-
-const jsonLd = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'SoftwareApplication',
-    '@id': 'https://agents.karthikey.in/#app',
-    name: 'Karthikey AI Agent Platform',
-    applicationCategory: 'BusinessApplication',
-    operatingSystem: 'Web',
-    url: 'https://agents.karthikey.in',
-    description: '52 pre-built AI agents for CRM and sales teams. Lead scoring, pipeline management, email drafting, forecasting and more. Works with any Excel or CRM data. Any industry.',
-    offers: [
-      { '@type': 'Offer', name: 'Free Trial', price: '0', priceCurrency: 'INR', description: '5 free credits on signup' },
-      { '@type': 'Offer', name: 'Starter', price: '499', priceCurrency: 'INR', description: '25 credits' },
-      { '@type': 'Offer', name: 'Growth', price: '1499', priceCurrency: 'INR', description: '100 credits' },
-      { '@type': 'Offer', name: 'Business', price: '3499', priceCurrency: 'INR', description: '300 shared team credits' },
-    ],
-    author: {
-      '@type': 'Organization',
-      name: 'Karthikey Intelligence Solutions',
-      url: 'https://karthikey.in',
-    },
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: [
-      {
-        '@type': 'Question',
-        name: 'What is Karthikey AI Agent Platform?',
-        acceptedAnswer: { '@type': 'Answer', text: 'Karthikey AI is India\'s first AI agent platform for CRM and sales teams. It provides 52 pre-built AI agents for lead scoring, pipeline management, email drafting, forecasting and more. Works with any Excel or CRM export for any industry.' },
-      },
-      {
-        '@type': 'Question',
-        name: 'How much does Karthikey AI cost?',
-        acceptedAnswer: { '@type': 'Answer', text: 'Karthikey AI uses a credits-based model with no subscription. You get 5 free credits on signup. Paid packs start at Rs.499 for 25 credits. Credits never expire.' },
-      },
-      {
-        '@type': 'Question',
-        name: 'Is my CRM data safe with Karthikey AI?',
-        acceptedAnswer: { '@type': 'Answer', text: 'Yes. All CRM data is processed entirely in your browser. Your customer data never reaches Karthikey servers.' },
-      },
-      {
-        '@type': 'Question',
-        name: 'Which industries does Karthikey AI work for?',
-        acceptedAnswer: { '@type': 'Answer', text: 'Karthikey AI works for any industry — real estate, SaaS, FMCG, banking, insurance, manufacturing and more. If you have a sales team and CRM data, Karthikey AI works for you.' },
-      },
-      {
-        '@type': 'Question',
-        name: 'How does team billing work?',
-        acceptedAnswer: { '@type': 'Answer', text: 'Admin buys credits into a shared pool. All team members draw from the same pool. One invoice for the whole team. Credits never expire.' },
-      },
-    ],
-  },
-]
-
 export default function Home() {
   const stats = [
     { val: '52', label: 'AI agents' },
@@ -90,10 +18,6 @@ export default function Home() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
       <Topbar />
       <main>
         <section style={{ background: 'var(--navy)', padding: '72px 24px', textAlign: 'center' }}>

@@ -1,34 +1,6 @@
 import Link from 'next/link'
 import Topbar from '../../components/Topbar'
 
-export const metadata = {
-  title: 'Pricing — Credits-Based AI Agent Plans | No Subscription',
-  description: 'Karthikey AI pricing: 5 free credits on signup. Starter ₹499 (25 credits), Growth ₹1,499 (100 credits), Team ₹3,499 (300 shared credits). No subscription. Credits never expire.',
-  keywords: ['Karthikey AI pricing', 'AI agent credits India', 'CRM automation pricing', 'AI platform cost India'],
-  alternates: { canonical: 'https://agents.karthikey.in/pricing' },
-  openGraph: {
-    title: 'Karthikey AI Pricing — Pay Only for What You Run',
-    description: 'No subscriptions. Credits never expire. Start free with 5 credits. Paid packs from ₹499. Team plan ₹3,499 for 300 shared credits.',
-    url: 'https://agents.karthikey.in/pricing',
-  },
-}
-
-const pricingJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Product',
-  name: 'Karthikey AI Agent Platform',
-  description: '52 pre-built AI agents for CRM and sales teams. Credits-based pricing, no subscription.',
-  url: 'https://agents.karthikey.in',
-  brand: { '@type': 'Brand', name: 'Karthikey AI' },
-  offers: [
-    { '@type': 'Offer', name: 'Free Trial', price: '0', priceCurrency: 'INR', description: '5 credits on signup, no card needed' },
-    { '@type': 'Offer', name: 'Starter Pack', price: '499', priceCurrency: 'INR', description: '25 credits, never expire' },
-    { '@type': 'Offer', name: 'Growth Pack', price: '1499', priceCurrency: 'INR', description: '100 credits, never expire' },
-    { '@type': 'Offer', name: 'Business Team Pack', price: '3499', priceCurrency: 'INR', description: '300 shared credits for up to 20 team members' },
-    { '@type': 'Offer', name: 'Enterprise Pack', price: '9999', priceCurrency: 'INR', description: '1,000 shared credits for large teams' },
-  ],
-}
-
 const plans = [
   {
     name: 'Individual',
@@ -108,10 +80,6 @@ const plans = [
 export default function PricingPage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingJsonLd) }}
-      />
       <Topbar />
       <main style={{ background: 'var(--bg)', minHeight: 'calc(100vh - 56px)' }}>
         {/* Header */}

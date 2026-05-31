@@ -2,14 +2,26 @@ import './globals.css'
 import MonitoringInit from './MonitoringInit'
 
 export const metadata = {
-  title: 'Karthikey – AI Agent Platform',
-  description: '52 AI agents for CRM-powered sales, service, marketing & ops teams. Works with any Excel, Zoho, Salesforce, or Dynamics 365 data.',
+  title: {
+    default: 'Karthikey AI — AI Agent Platform for Sales & CRM Teams',
+    template: '%s | Karthikey AI',
+  },
+  description: '52 pre-built AI agents for CRM and sales teams. Lead scoring, pipeline management, email drafting, forecasting and more. Works with any Excel or CRM data. Any industry. Start free.',
+  keywords: ['AI agents', 'CRM automation', 'lead scoring AI', 'sales automation India', 'AI platform India', 'Karthikey AI', 'pipeline management AI', 'email drafting AI'],
+  metadataBase: new URL('https://agents.karthikey.in'),
+  openGraph: {
+    siteName: 'Karthikey AI',
+    type: 'website',
+    locale: 'en_IN',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@karthikeyai',
+  },
   icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-    ],
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
     apple: '/icon.svg',
-  }
+  },
 }
 
 export default function RootLayout({ children }) {
