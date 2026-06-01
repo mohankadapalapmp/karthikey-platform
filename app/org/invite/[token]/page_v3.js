@@ -19,16 +19,6 @@ export default function AcceptInvitePage() {
     loadInvite()
   }, [token])
 
-  // Auto-accept if user just logged in via redirect (?autoaccept=1)
-  useEffect(() => {
-    if (user && invite && org && !accepting && !done) {
-      const params = new URLSearchParams(window.location.search)
-      if (params.get('autoaccept') === '1') {
-        acceptInvite()
-      }
-    }
-  }, [user, invite, org])
-
   async function loadInvite() {
     const { data: inv } = await supabase.from('org_invites').select('*, organisations(*)').eq('token', token).single()
     if (!inv) { setError('This invite link is invalid or has expired.'); setLoading(false); return }
@@ -54,7 +44,7 @@ export default function AcceptInvitePage() {
   }
 
   async function acceptInvite() {
-    if (!user) { router.push(`/login?signup=1&redirect=/org/invite/${token}%3Fautoaccept%3D1`); return }
+    if (!user) { router.push(`/login?signup=1&redirect=/org/invite/${token}`); return }
     setAccepting(true); setError('')
     try {
       // Re-fetch session to ensure it's fresh
