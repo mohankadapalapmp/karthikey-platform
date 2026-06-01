@@ -75,42 +75,14 @@ export default function OrgDashboardPage() {
     if (inviting) return
     setInviting(true); setError(''); setInviteLink('')
     try {
-      // 1. Create invite record in DB
       const { data: invite, error: invErr } = await supabase
         .from('org_invites')
         .insert({ org_id: org.id, email: inviteEmail.trim(), role: inviteRole, invited_by: user.id })
         .select().single()
       if (invErr) throw invErr
-
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
       const link = `${baseUrl}/org/invite/${invite.token}`
-
-      // 2. Get inviter's name
-      const { data: profile } = await supabase
-        .from('accounts').select('full_name, email').eq('id', user.id).single()
-      const inviterName = profile?.full_name || profile?.email || 'Your teammate'
-
-      // 3. Send invitation email via Edge Function
-      const { error: emailErr } = await supabase.functions.invoke('send-invite-email', {
-        body: {
-          inviteToken: invite.token,
-          orgName: org.name,
-          invitedEmail: inviteEmail.trim(),
-          inviterName,
-          role: inviteRole,
-          appUrl: baseUrl,
-        }
-      })
-
-      // 4. Show result — email send failure is non-blocking (link still works)
-      if (emailErr) {
-        console.error('Email send failed:', emailErr)
-        setInviteLink(link) // fallback: show link to copy manually
-        setError('Invite created but email delivery failed. Share this link manually.')
-      } else {
-        setInviteLink('sent') // signal that email was sent
-      }
-
+      setInviteLink(link)
       setInviteEmail('')
       await loadOrgData(user.id)
     } catch (err) {
@@ -335,27 +307,18 @@ export default function OrgDashboardPage() {
                   {error && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 6, padding: '8px 12px', fontSize: 13, color: '#991B1B' }}>{error}</div>}
                   {inviteLink && (
                     <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 6, padding: '10px 12px' }}>
-                      {inviteLink === 'sent' ? (
-                        <>
-                          <p style={{ fontSize: 12, fontWeight: 600, color: '#166534', marginBottom: 2 }}>✅ Invitation email sent!</p>
-                          <p style={{ fontSize: 12, color: '#166534', margin: 0 }}>They'll receive an email with an Accept invitation button.</p>
-                        </>
-                      ) : (
-                        <>
-                          <p style={{ fontSize: 12, fontWeight: 600, color: '#166534', marginBottom: 4 }}>✅ Invite created — share this link manually:</p>
-                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                            <code style={{ fontSize: 11, color: '#166534', background: '#DCFCE7', padding: '4px 8px', borderRadius: 4, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inviteLink}</code>
-                            <button type="button" onClick={() => navigator.clipboard.writeText(inviteLink)}
-                              style={{ fontSize: 11, padding: '4px 8px', background: '#166534', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                              Copy
-                            </button>
-                          </div>
-                        </>
-                      )}
+                      <p style={{ fontSize: 12, fontWeight: 600, color: '#166534', marginBottom: 4 }}>✅ Invite link created — share this with your team member:</p>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <code style={{ fontSize: 11, color: '#166534', background: '#DCFCE7', padding: '4px 8px', borderRadius: 4, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inviteLink}</code>
+                        <button type="button" onClick={() => navigator.clipboard.writeText(inviteLink)}
+                          style={{ fontSize: 11, padding: '4px 8px', background: '#166534', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                          Copy
+                        </button>
+                      </div>
                     </div>
                   )}
                   <button type="submit" disabled={inviting} className="btn-primary" style={{ padding: '10px', fontSize: 13, justifyContent: 'center' }}>
-                    {inviting ? 'Sending invite…' : 'Send invitation email →'}
+                    {inviting ? 'Creating invite…' : 'Generate invite link →'}
                   </button>
                 </form>
               </div>
