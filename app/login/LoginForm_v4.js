@@ -20,7 +20,7 @@ export default function LoginForm() {
   useEffect(() => {
     if (params.get('signup') === '1') setIsSignup(true)
     supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) router.push(decodeURIComponent(params.get('redirect') || '') || (params.get('type') === 'team' ? '/org/create' : '/agents'))
+      if (data?.user) router.push(params.get('redirect') || (params.get('type') === 'team' ? '/org/create' : '/agents'))
     })
   }, [])
 
@@ -40,8 +40,7 @@ export default function LoginForm() {
       } else {
         const { error: err } = await supabase.auth.signInWithPassword({ email, password })
         if (err) throw err
-        const rawRedirect = params.get('redirect') || '/agents'
-        const redirectTo = decodeURIComponent(rawRedirect)
+        const redirectTo = params.get('redirect') || '/agents'
         router.push(redirectTo)
       }
     } catch (err) {

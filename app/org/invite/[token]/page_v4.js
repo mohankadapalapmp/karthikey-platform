@@ -54,7 +54,7 @@ export default function AcceptInvitePage() {
   }
 
   async function acceptInvite() {
-    if (!user) { const redirectPath = encodeURIComponent(`/org/invite/${token}?autoaccept=1`); router.push(`/login?redirect=${redirectPath}`); return }
+    if (!user) { router.push(`/login?signup=1&redirect=/org/invite/${token}%3Fautoaccept%3D1`); return }
     setAccepting(true); setError('')
     try {
       // Re-fetch session to ensure it's fresh
