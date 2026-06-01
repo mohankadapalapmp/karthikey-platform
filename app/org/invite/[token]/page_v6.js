@@ -19,7 +19,18 @@ export default function AcceptInvitePage() {
     loadInvite()
   }, [token])
 
-
+  // Auto-accept if user just logged in via redirect (?autoaccept=1)
+  useEffect(() => {
+    console.log('AutoAccept check:', { user: !!user, invite: !!invite, org: !!org, accepting, done, search: typeof window !== 'undefined' ? window.location.search : 'SSR' })
+    if (user && invite && org && !accepting && !done) {
+      const params = new URLSearchParams(window.location.search)
+      console.log('AutoAccept param:', params.get('autoaccept'))
+      if (params.get('autoaccept') === '1') {
+        console.log('Triggering auto-accept...')
+        acceptInvite()
+      }
+    }
+  }, [user, invite, org])
 
   async function loadInvite() {
     const { data: inv } = await supabase.from('org_invites').select('*, organisations(*)').eq('token', token).single()
@@ -41,39 +52,12 @@ export default function AcceptInvitePage() {
     }
 
     const { data: session } = await supabase.auth.getSession()
-    const currentUser = session?.session?.user || null
-    setUser(currentUser)
+    setUser(session?.session?.user || null)
     setLoading(false)
-
-    // If user is already logged in when page loads, auto-accept
-    if (currentUser && inv.status === 'pending') {
-      // Small delay to ensure state is set
-      setTimeout(async () => {
-        try {
-          const { error: memberErr } = await supabase.from('org_members').insert({
-            org_id: inv.org_id,
-            user_id: currentUser.id,
-            role: inv.role,
-            status: 'active',
-            invited_email: inv.email
-          })
-          if (memberErr && !memberErr.code?.includes('23505') && !memberErr.message?.includes('duplicate')) {
-            console.error('Member insert error:', memberErr)
-            return
-          }
-          await supabase.from('org_invites').update({ status: 'accepted' }).eq('token', token)
-          setDone(true)
-          const orgSlug = inv.organisations?.slug || inv.org_id
-          setTimeout(() => router.push(`/org/${orgSlug}`), 1500)
-        } catch (err) {
-          console.error('Auto-accept error:', err)
-        }
-      }, 500)
-    }
   }
 
   async function acceptInvite() {
-    if (!user) { const redirectPath = encodeURIComponent(`/org/invite/${token}`); router.push(`/login?redirect=${redirectPath}`); return }
+    if (!user) { const redirectPath = encodeURIComponent(`/org/invite/${token}?autoaccept=1`); router.push(`/login?redirect=${redirectPath}`); return }
     setAccepting(true); setError('')
     try {
       // Re-fetch session to ensure it's fresh
