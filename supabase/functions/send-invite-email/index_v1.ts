@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,7 +13,6 @@ serve(async (req) => {
     const { inviteToken, orgName, invitedEmail, inviterName, role, appUrl } = await req.json()
 
     const inviteUrl = `${appUrl}/org/invite/${inviteToken}`
-    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 
     const emailHtml = `
 <!DOCTYPE html>
@@ -26,7 +26,7 @@ serve(async (req) => {
         <!-- Header -->
         <tr>
           <td style="background:#0D1B3E;padding:28px 32px;text-align:center;">
-            <div style="width:44px;height:44px;background:#C9A84C;border-radius:10px;display:inline-block;font-size:22px;font-weight:700;color:#0D1B3E;line-height:44px;text-align:center;">K</div>
+            <div style="width:44px;height:44px;background:#C9A84C;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#0D1B3E;line-height:44px;">K</div>
             <p style="margin:10px 0 0;font-size:13px;font-weight:600;color:#C9A84C;letter-spacing:0.08em;">KARTHIKEY AI</p>
           </td>
         </tr>
@@ -36,7 +36,7 @@ serve(async (req) => {
           <td style="padding:32px 32px 24px;">
             <h1 style="margin:0 0 8px;font-size:20px;font-weight:600;color:#111827;">You're invited to join ${orgName}</h1>
             <p style="margin:0 0 24px;font-size:14px;color:#6B7280;line-height:1.6;">
-              <strong style="color:#111827;">${inviterName}</strong> has invited you to join <strong style="color:#0D1B3E;">${orgName}</strong> on Karthikey AI as a <strong style="color:#111827;">${role}</strong>.
+              <strong style="color:#111827;">${inviterName}</strong> has invited you to join the <strong style="color:#0D1B3E;">${orgName}</strong> team on Karthikey AI as a <strong style="color:#111827;">${role}</strong>.
             </p>
 
             <!-- Info box -->
@@ -62,7 +62,7 @@ serve(async (req) => {
             <!-- CTA Button -->
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr><td align="center">
-                <a href="${inviteUrl}" style="display:inline-block;background:#0D1B3E;color:#C9A84C;text-decoration:none;padding:13px 32px;border-radius:8px;font-size:14px;font-weight:600;">
+                <a href="${inviteUrl}" style="display:inline-block;background:#0D1B3E;color:#C9A84C;text-decoration:none;padding:13px 32px;border-radius:8px;font-size:14px;font-weight:600;letter-spacing:0.01em;">
                   Accept invitation →
                 </a>
               </td></tr>
@@ -89,24 +89,20 @@ serve(async (req) => {
 </body>
 </html>`
 
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Karthikey AI <onboarding@resend.dev>',
-        to: [invitedEmail],
-        subject: `${inviterName} invited you to join ${orgName} on Karthikey AI`,
-        html: emailHtml,
-      }),
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    const { error } = await supabaseAdmin.auth.admin.sendRawEmail({
+      to: invitedEmail,
+      subject: `${inviterName} invited you to join ${orgName} on Karthikey AI`,
+      html: emailHtml,
     })
 
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.message || 'Resend API error')
+    if (error) throw error
 
-    return new Response(JSON.stringify({ success: true, id: data.id }), {
+    return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
