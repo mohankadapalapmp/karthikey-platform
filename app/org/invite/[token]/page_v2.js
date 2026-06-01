@@ -25,18 +25,7 @@ export default function AcceptInvitePage() {
     if (inv.status !== 'pending') { setError('This invite has already been used.'); setLoading(false); return }
     if (new Date(inv.expires_at) < new Date()) { setError('This invite link has expired.'); setLoading(false); return }
     setInvite(inv)
-
-    // If org didn't load via join (RLS blocks unauthenticated), fetch org name directly
-    if (inv.organisations) {
-      setOrg(inv.organisations)
-    } else {
-      const { data: orgData } = await supabase
-        .from('organisations')
-        .select('id, name, slug')
-        .eq('id', inv.org_id)
-        .single()
-      setOrg(orgData || { name: 'your team', slug: '' })
-    }
+    setOrg(inv.organisations)
 
     const { data: session } = await supabase.auth.getSession()
     setUser(session?.session?.user || null)
