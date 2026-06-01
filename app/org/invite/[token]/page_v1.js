@@ -36,40 +36,20 @@ export default function AcceptInvitePage() {
     if (!user) { router.push(`/login?signup=1&redirect=/org/invite/${token}`); return }
     setAccepting(true); setError('')
     try {
-      // Re-fetch session to ensure it's fresh
-      const { data: sessionData } = await supabase.auth.getSession()
-      const freshUser = sessionData?.session?.user
-      if (!freshUser) throw new Error('Session expired — please sign in again.')
-
       // Add to org_members
       const { error: memberErr } = await supabase.from('org_members').insert({
-        org_id: invite.org_id,
-        user_id: freshUser.id,
-        role: invite.role,
-        status: 'active',
-        invited_email: invite.email
+        org_id: invite.org_id, user_id: user.id,
+        role: invite.role, status: 'active', invited_email: invite.email
       })
-
-      if (memberErr) {
-        // If duplicate, they're already a member — treat as success
-        if (memberErr.message.includes('duplicate') || memberErr.code === '23505') {
-          await supabase.from('org_invites').update({ status: 'accepted' }).eq('token', token)
-          setDone(true)
-          setTimeout(() => router.push(`/org/${org.slug}`), 2000)
-          return
-        }
-        throw memberErr
-      }
+      if (memberErr && !memberErr.message.includes('duplicate')) throw memberErr
 
       // Mark invite as accepted
-      const { error: invErr } = await supabase.from('org_invites').update({ status: 'accepted' }).eq('token', token)
-      if (invErr) console.error('Failed to mark invite accepted:', invErr)
+      await supabase.from('org_invites').update({ status: 'accepted' }).eq('token', token)
 
       setDone(true)
       setTimeout(() => router.push(`/org/${org.slug}`), 2000)
     } catch (err) {
-      console.error('Accept invite error:', err)
-      setError(err.message || 'Something went wrong. Please try again.')
+      setError(err.message)
     } finally {
       setAccepting(false)
     }

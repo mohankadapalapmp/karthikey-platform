@@ -87,7 +87,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Karthikey AI <noreply@karthikey.in>',
+        from: 'Karthikey AI <onboarding@resend.dev>',
         to: [invitedEmail],
         subject: `${inviterName} invited you to join ${orgName} on Karthikey AI`,
         html: emailHtml,
