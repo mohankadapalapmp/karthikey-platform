@@ -21,12 +21,9 @@ export default function AcceptInvitePage() {
 
   // Auto-accept if user just logged in via redirect (?autoaccept=1)
   useEffect(() => {
-    console.log('AutoAccept check:', { user: !!user, invite: !!invite, org: !!org, accepting, done, search: typeof window !== 'undefined' ? window.location.search : 'SSR' })
     if (user && invite && org && !accepting && !done) {
       const params = new URLSearchParams(window.location.search)
-      console.log('AutoAccept param:', params.get('autoaccept'))
       if (params.get('autoaccept') === '1') {
-        console.log('Triggering auto-accept...')
         acceptInvite()
       }
     }
