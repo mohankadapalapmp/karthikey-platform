@@ -4,10 +4,12 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
   const token = searchParams.get('token')
 
-  if (!token) return NextResponse.redirect(new URL('/agents', request.url))
+  if (!token) {
+    return NextResponse.redirect(new URL('/agents', request.url))
+  }
 
   try {
     const supabaseAdmin = createClient(
@@ -15,40 +17,41 @@ export async function GET(request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     )
 
-    const { data: invite } = await supabaseAdmin
+    const { data: invite, error: invErr } = await supabaseAdmin
       .from('org_invites')
       .select('*, organisations(*)')
       .eq('token', token)
       .single()
 
-    if (!invite) return NextResponse.redirect(new URL('/agents?invite=invalid', request.url))
+    if (invErr || !invite) {
+      return NextResponse.redirect(new URL('/agents?invite=invalid', request.url))
+    }
+
     if (invite.status !== 'pending') {
-      return NextResponse.redirect(new URL(`/org/${invite.organisations?.slug || ''}`, request.url))
+      const slug = invite.organisations?.slug || ''
+      return NextResponse.redirect(new URL(`/org/${slug}`, request.url))
+    }
+
+    if (new Date(invite.expires_at) < new Date()) {
+      return NextResponse.redirect(new URL('/agents?invite=expired', request.url))
     }
 
     const supabase = createRouteHandlerClient({ cookies })
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session?.user) {
-      // Store token in cookie and redirect to login
-      const response = NextResponse.redirect(new URL('/login', request.url))
-      response.cookies.set('pending_invite_token', token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 48 // 48 hours
-      })
-      return response
+      const redirectUrl = encodeURIComponent(`/api/accept-invite?token=${token}`)
+      return NextResponse.redirect(new URL(`/login?redirect=${redirectUrl}`, request.url))
     }
 
-    // User is logged in — do the insert
+    const user = session.user
     const orgSlug = invite.organisations?.slug || invite.org_id
 
     const { error: memberErr } = await supabaseAdmin
       .from('org_members')
       .insert({
         org_id: invite.org_id,
-        user_id: session.user.id,
+        user_id: user.id,
         role: invite.role,
         status: 'active',
         invited_email: invite.email
@@ -64,10 +67,7 @@ export async function GET(request) {
       .update({ status: 'accepted' })
       .eq('token', token)
 
-    // Clear the cookie and redirect to org
-    const response = NextResponse.redirect(new URL(`/org/${orgSlug}`, request.url))
-    response.cookies.delete('pending_invite_token')
-    return response
+    return NextResponse.redirect(new URL(`/org/${orgSlug}`, request.url))
 
   } catch (err) {
     console.error('Accept invite error:', err)
