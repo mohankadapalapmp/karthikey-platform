@@ -224,18 +224,7 @@ export default function AgentRunnerPage() {
   function getAgentTextOutput() {
     return messages
       .filter(m => m.role === 'agent')
-      .filter(m => !m.text?.startsWith('✅ Loaded') && !m.text?.includes('Ready to analyse'))
-      .map(m => {
-        let text = m.text || ''
-        // Convert markdown to plain text
-        text = text.replace(/\*\*(.+?)\*\*/g, '$1')  // **bold** -> bold
-        text = text.replace(/\*(.+?)\*/g, '$1')         // *italic* -> italic
-        text = text.replace(/^#{1,3}\s+/gm, '')          // ## headings
-        text = text.replace(/^-\s+/gm, '• ')             // - list -> bullet
-        text = text.replace(/`(.+?)`/g, '$1')             // `code` -> code
-        return text.trim()
-      })
-      .filter(t => t.length > 0)
+      .map(m => m.text)
       .join('\n\n')
   }
 
@@ -264,9 +253,7 @@ export default function AgentRunnerPage() {
     doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
 
-    // Fix rupee symbol encoding
-    const cleanText = text.replace(/₹/g, 'Rs.')
-    const lines = doc.splitTextToSize(cleanText, pageWidth)
+    const lines = doc.splitTextToSize(text, pageWidth)
     lines.forEach(line => {
       if (y > doc.internal.pageSize.getHeight() - 40) {
         doc.addPage()
@@ -291,8 +278,7 @@ export default function AgentRunnerPage() {
         doc.setFillColor(i % 2 === 0 ? 255 : 248, i % 2 === 0 ? 255 : 250, i % 2 === 0 ? 255 : 250)
         doc.rect(margin, y - 10, pageWidth, 14, 'F')
         doc.setTextColor(0,0,0)
-        const rLine = `${r.name || ''} | ${(r.score||'').toUpperCase()} | ${(r.reason||'').replace(/₹/g,'Rs.').substring(0,55)} | ${(r.action||'').substring(0,38)}`
-        doc.text(rLine, margin + 4, y)
+        doc.text(`${r.name || ''} | ${r.score || ''} | ${(r.reason || '').substring(0, 60)} | ${(r.action || '').substring(0, 40)}`, margin + 4, y)
         y += 14
       })
     }
@@ -311,6 +297,7 @@ export default function AgentRunnerPage() {
         heading: HeadingLevel.HEADING_1,
       }),
       new Paragraph({
+        text: `Generated: ${new Date().toLocaleDateString('en-IN')}`,
         children: [new TextRun({ text: `Generated: ${new Date().toLocaleDateString('en-IN')}`, color: '6B7280', size: 18 })]
       }),
       new Paragraph({ text: '' }),
