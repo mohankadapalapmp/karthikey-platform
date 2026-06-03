@@ -8,8 +8,6 @@ import Link from 'next/link'
 import * as XLSX from 'xlsx'
 import { track, Events } from '../../../lib/analytics'
 import { captureError } from '../../../lib/monitoring'
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx'
-import jsPDF from 'jspdf'
 
 const BATCH_SIZE = 25
 const SCORE_AGENT_IDS = ['lead-qual','lead-score','case-class','sentiment',
@@ -221,179 +219,12 @@ export default function AgentRunnerPage() {
     XLSX.writeFile(wb, `karthikey_enriched_${agentId}.xlsx`)
   }
 
-  function getAgentTextOutput() {
-    return messages
-      .filter(m => m.role === 'agent')
-      .map(m => m.text)
-      .join('\n\n')
-  }
-
-  function exportPDF() {
-    const text = getAgentTextOutput()
-    if (!text) return
-    track(Events.EXPORT_PDF || 'export_pdf', { agentId })
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' })
-    const margin = 40
-    const pageWidth = doc.internal.pageSize.getWidth() - margin * 2
-    const lineHeight = 14
-    let y = 60
-
-    // Header
-    doc.setFillColor(13, 27, 62)
-    doc.rect(0, 0, doc.internal.pageSize.getWidth(), 45, 'F')
-    doc.setTextColor(201, 168, 76)
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.text('KARTHIKEY AI', margin, 28)
-    doc.setFontSize(10)
-    doc.setTextColor(255, 255, 255)
-    doc.text(agent?.name || agentId, margin, 40)
-
-    doc.setTextColor(0, 0, 0)
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'normal')
-
-    const lines = doc.splitTextToSize(text, pageWidth)
-    lines.forEach(line => {
-      if (y > doc.internal.pageSize.getHeight() - 40) {
-        doc.addPage()
-        y = 40
-      }
-      doc.text(line, margin, y)
-      y += lineHeight
-    })
-
-    // If results table, add it
-    if (results?.length) {
-      if (y > doc.internal.pageSize.getHeight() - 80) { doc.addPage(); y = 40 }
-      y += 10
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(10)
-      doc.text('AI Scored Results', margin, y)
-      y += 16
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(8)
-      results.forEach((r, i) => {
-        if (y > doc.internal.pageSize.getHeight() - 40) { doc.addPage(); y = 40 }
-        doc.setFillColor(i % 2 === 0 ? 255 : 248, i % 2 === 0 ? 255 : 250, i % 2 === 0 ? 255 : 250)
-        doc.rect(margin, y - 10, pageWidth, 14, 'F')
-        doc.setTextColor(0,0,0)
-        doc.text(`${r.name || ''} | ${r.score || ''} | ${(r.reason || '').substring(0, 60)} | ${(r.action || '').substring(0, 40)}`, margin + 4, y)
-        y += 14
-      })
-    }
-
-    doc.save(`karthikey_${agentId}_${new Date().toISOString().slice(0,10)}.pdf`)
-  }
-
-  async function exportWord() {
-    const text = getAgentTextOutput()
-    if (!text) return
-    track(Events.EXPORT_WORD || 'export_word', { agentId })
-
-    const paragraphs = [
-      new Paragraph({
-        text: `Karthikey AI — ${agent?.name || agentId}`,
-        heading: HeadingLevel.HEADING_1,
-      }),
-      new Paragraph({
-        text: `Generated: ${new Date().toLocaleDateString('en-IN')}`,
-        children: [new TextRun({ text: `Generated: ${new Date().toLocaleDateString('en-IN')}`, color: '6B7280', size: 18 })]
-      }),
-      new Paragraph({ text: '' }),
-      ...text.split('\n').map(line =>
-        new Paragraph({
-          children: [new TextRun({ text: line, size: 22 })]
-        })
-      )
-    ]
-
-    if (results?.length) {
-      paragraphs.push(new Paragraph({ text: '' }))
-      paragraphs.push(new Paragraph({ text: 'AI Scored Results', heading: HeadingLevel.HEADING_2 }))
-      results.forEach(r => {
-        paragraphs.push(new Paragraph({
-          children: [
-            new TextRun({ text: `${r.name || ''} `, bold: true, size: 20 }),
-            new TextRun({ text: `[${r.score?.toUpperCase() || ''}] `, color: r.score === 'hot' ? 'DC2626' : r.score === 'warm' ? '2563EB' : '6B7280', size: 20 }),
-            new TextRun({ text: `${r.reason || ''} — ${r.action || ''}`, size: 20 }),
-          ]
-        }))
-      })
-    }
-
-    const doc = new Document({ sections: [{ properties: {}, children: paragraphs }] })
-    const blob = await Packer.toBlob(doc)
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `karthikey_${agentId}_${new Date().toISOString().slice(0,10)}.docx`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const [showEmailModal, setShowEmailModal] = useState(false)
-  const [emailTo, setEmailTo] = useState('')
-  const [emailSending, setEmailSending] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
-
-  async function sendEmail() {
-    const text = getAgentTextOutput()
-    if (!emailTo || !text) return
-    setEmailSending(true)
-    try {
-      const { error } = await supabase.functions.invoke('send-agent-output', {
-        body: {
-          to: emailTo,
-          agentName: agent?.name || agentId,
-          output: text,
-          results: results || [],
-          appUrl: window.location.origin
-        }
-      })
-      if (error) throw error
-      setEmailSent(true)
-      setTimeout(() => { setShowEmailModal(false); setEmailSent(false); setEmailTo('') }, 2000)
-    } catch (err) {
-      alert('Email send failed. Please try again.')
-    } finally {
-      setEmailSending(false)
-    }
-  }
-
   const isScoringAgent = SCORE_AGENT_IDS.includes(agentId)
   const totalBatches = data ? Math.ceil(data.length / BATCH_SIZE) : 0
   const batchCreditCost = data ? Math.max(agent.credits, totalBatches) : agent.credits
 
   return (
     <>
-      {showEmailModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: 24, width: 380, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-            <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>✉️ Email agent output</div>
-            <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 16 }}>Send the AI analysis to any email address.</p>
-            {emailSent ? (
-              <div style={{ textAlign: 'center', padding: '20px 0', color: '#16A34A', fontWeight: 500 }}>✅ Email sent successfully!</div>
-            ) : (
-              <>
-                <input
-                  type="email"
-                  value={emailTo}
-                  onChange={e => setEmailTo(e.target.value)}
-                  placeholder="recipient@company.com"
-                  style={{ width: '100%', padding: '9px 12px', border: '1px solid #D1D5DB', borderRadius: 8, fontSize: 13, marginBottom: 12, boxSizing: 'border-box' }}
-                />
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => setShowEmailModal(false)} style={{ flex: 1, padding: '9px', border: '1px solid #D1D5DB', borderRadius: 8, background: '#fff', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-                  <button onClick={sendEmail} disabled={emailSending || !emailTo} style={{ flex: 1, padding: '9px', border: 'none', borderRadius: 8, background: '#0D1B3E', color: '#C9A84C', fontSize: 13, fontWeight: 600, cursor: emailSending ? 'not-allowed' : 'pointer' }}>
-                    {emailSending ? 'Sending…' : 'Send email →'}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
       <Topbar />
       <main className="page-container" style={{ paddingTop: 24, paddingBottom: 48 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
@@ -475,12 +306,9 @@ export default function AgentRunnerPage() {
                   </div>
                 </div>
                 <ResultsTable results={results} />
-                <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-                  <button onClick={exportExcel} className="btn-outline" style={{ fontSize: 12 }}>📊 Excel scores</button>
-                  <button onClick={exportEnriched} className="btn-primary" style={{ fontSize: 12, padding: '7px 14px' }}>📥 Excel enriched</button>
-                  <button onClick={exportPDF} className="btn-outline" style={{ fontSize: 12 }}>📄 PDF</button>
-                  <button onClick={exportWord} className="btn-outline" style={{ fontSize: 12 }}>📝 Word</button>
-                  <button onClick={() => setShowEmailModal(true)} className="btn-outline" style={{ fontSize: 12 }}>✉️ Email</button>
+                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                  <button onClick={exportExcel} className="btn-outline" style={{ fontSize: 12 }}>📥 Export scores</button>
+                  <button onClick={exportEnriched} className="btn-primary" style={{ fontSize: 12, padding: '7px 14px' }}>📥 Export enriched file</button>
                 </div>
               </div>
             )}

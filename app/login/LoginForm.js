@@ -20,11 +20,7 @@ export default function LoginForm() {
   useEffect(() => {
     if (params.get('signup') === '1') setIsSignup(true)
     supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) {
-        const redirectParam = params.get('redirect')
-        const dest = redirectParam ? decodeURIComponent(redirectParam) : (params.get('type') === 'team' ? '/org/create' : '/agents')
-        router.push(dest)
-      }
+      if (data?.user) router.push(decodeURIComponent(params.get('redirect') || '') || (params.get('type') === 'team' ? '/org/create' : '/agents'))
     })
   }, [])
 
@@ -44,13 +40,6 @@ export default function LoginForm() {
       } else {
         const { error: err } = await supabase.auth.signInWithPassword({ email, password })
         if (err) throw err
-        // Check for pending invite cookie
-        const pendingInvite = document.cookie.split(';').find(c => c.trim().startsWith('pending_invite_token='))
-        if (pendingInvite) {
-          const inviteToken = pendingInvite.split('=')[1]?.trim()
-          router.push(`/api/accept-invite?token=${inviteToken}`)
-          return
-        }
         const rawRedirect = params.get('redirect') || '/agents'
         const redirectTo = decodeURIComponent(rawRedirect)
         router.push(redirectTo)
