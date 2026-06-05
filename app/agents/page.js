@@ -26,7 +26,7 @@ const S = {
   logoText: { fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.4)', letterSpacing:'0.12em', marginTop:2 },
   sidebarSection: { padding:'16px 10px 4px', fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.25)', letterSpacing:'0.12em', textTransform:'uppercase' },
   deptItem: { display:'flex', alignItems:'center', gap:10, padding:'8px 12px', borderRadius:6, cursor:'pointer', margin:'1px 8px', transition:'all 0.12s', color:'rgba(255,255,255,0.55)', fontSize:13 },
-  deptItemActive: { background:'rgba(21,101,192,0.35)', color:'#fff', borderLeft:'3px solid #1565C0' },
+  deptItemActive: { background:'#1565C0', color:'#fff', fontWeight:500 },
   deptCount: { marginLeft:'auto', fontSize:10, fontWeight:700, background:'rgba(255,255,255,0.1)', borderRadius:10, padding:'1px 7px', color:'rgba(255,255,255,0.4)' },
   deptCountActive: { background:'rgba(21,101,192,0.5)', color:'#90CAF9' },
   sidebarBottom: { marginTop:'auto', padding:'14px 16px', borderTop:'1px solid rgba(255,255,255,0.08)' },
@@ -62,14 +62,14 @@ const S = {
 
   // Card
   card: { background:'#fff', border:'1px solid #E2E8F0', borderRadius:10, padding:'16px', cursor:'pointer', transition:'all 0.15s', position:'relative', boxShadow:'0 1px 3px rgba(0,0,0,0.04)' },
-  cardIcon: { width:36, height:36, borderRadius:8, background:'#EFF6FF', border:'1px solid #DBEAFE', display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, marginBottom:10 },
+  cardIcon: { width:34, height:34, borderRadius:8, background:'#F0F7FF', border:'1px solid #E0EDFF', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, marginBottom:10 },
   cardName: { fontSize:13, fontWeight:700, color:'#0F172A', marginBottom:3, lineHeight:1.3 },
   cardDesc: { fontSize:11, color:'#94A3B8', lineHeight:1.55, marginBottom:12, minHeight:30 },
   cardFooter: { display:'flex', alignItems:'center', justifyContent:'space-between' },
   tagQuick: { fontSize:10, padding:'2px 8px', borderRadius:4, background:'#F0FDF4', color:'#15803D', border:'1px solid #BBF7D0', fontWeight:600 },
   tagAdv: { fontSize:10, padding:'2px 8px', borderRadius:4, background:'#FFF7ED', color:'#C2410C', border:'1px solid #FED7AA', fontWeight:600 },
   tagBuilt: { fontSize:10, padding:'2px 8px', borderRadius:4, background:'#EFF6FF', color:'#1D4ED8', border:'1px solid #BFDBFE', fontWeight:600 },
-  runBtn: { background:'#1565C0', color:'#fff', border:'none', borderRadius:6, padding:'5px 14px', fontSize:11, fontWeight:700, cursor:'pointer', letterSpacing:'0.01em' },
+
   creditBadge: { position:'absolute', top:12, right:12, fontSize:10, color:'#94A3B8', fontWeight:600 },
 }
 
@@ -136,7 +136,15 @@ export default function AgentsPage() {
                 marginLeft: isActive ? 5 : 8,
               }}
             >
-              <span style={{fontSize:11, opacity:0.6}}>{DEPT_META[d].icon}</span>
+              <span style={{opacity:0.7,display:'flex',alignItems:'center',flexShrink:0}}>
+                {d==='All'&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>}
+                {d==='Sales'&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>}
+                {d==='Service'&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>}
+                {d==='Marketing'&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>}
+                {d==='Ops'&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>}
+                {d==='Finance'&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
+                {d==='HR'&&<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>}
+              </span>
               <span style={{flex:1}}>{DEPT_META[d].label || d}</span>
               <span style={{...S.deptCount, ...(isActive ? S.deptCountActive : {})}}>{counts[d]}</span>
             </div>
@@ -261,12 +269,9 @@ export default function AgentsPage() {
                     <span style={agent.tier === 'Built' ? S.tagBuilt : agent.credits > 1 ? S.tagAdv : S.tagQuick}>
                       {agent.tier === 'Built' ? 'Built-in' : agent.credits > 1 ? 'Advanced' : 'Quick'}
                     </span>
-                    <button
-                      onClick={e => { e.stopPropagation(); launch(agent) }}
-                      style={S.runBtn}
-                    >
-                      Run →
-                    </button>
+                    <div style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:'#94A3B8'}}>
+                      Open <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </div>
                   </div>
                 </div>
               ))}
