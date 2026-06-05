@@ -68,6 +68,7 @@
   --dept-active-count-bg: #FFF0C0;
   --dept-active-count-text: #8B6218;
   --run-btn-bg: linear-gradient(135deg,#C9A84C,#A07830);
+  --card-hover-shadow: 0 4px 20px rgba(201,168,76,0.12);
   --run-btn-text: #fff;
   --run-btn-radius: 20px;
   --topbar-border: #EDE8DC;
