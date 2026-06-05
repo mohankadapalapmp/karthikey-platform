@@ -136,10 +136,10 @@ export default function AgentsPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <div>
               <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-display, Syne, sans-serif)', margin: 0 }}>
-                dept === "All" ? "AI Agent Marketplace" : `${currentDept?.label || dept} Agents`
+                {dept === 'All' ? 'AI Agent Marketplace' : (currentDept?.label || dept) + ' Agents'}
               </h1>
               <p style={{ fontSize: 12, color: 'var(--text3)', margin: '3px 0 0' }}>
-                dept === "All" ? "52 agents across 6 departments — any industry, any CRM, any Excel" : `${filtered.length} agents · upload your CRM or Excel file to get started`
+                {dept === 'All' ? '52 agents across 6 departments — any industry, any CRM, any Excel' : filtered.length + ' agents · upload your CRM or Excel file to get started'}
               </p>
             </div>
 
