@@ -75,7 +75,7 @@ export default function AgentsPage() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
-                  padding: '7px 9px',
+                  padding: '8px 10px',
                   borderRadius: 8,
                   cursor: 'pointer',
                   background: isActive ? 'var(--surface2)' : 'transparent',
@@ -136,10 +136,10 @@ export default function AgentsPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <div>
               <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-display, Syne, sans-serif)', margin: 0 }}>
-                dept === "All" ? "AI Agent Marketplace" : `${currentDept?.label || dept} Agents`
+                {currentDept?.label || dept} Agents
               </h1>
               <p style={{ fontSize: 12, color: 'var(--text3)', margin: '3px 0 0' }}>
-                dept === "All" ? "52 agents across 6 departments — any industry, any CRM, any Excel" : `${filtered.length} agents · upload your CRM or Excel file to get started`
+                {filtered.length} agents · upload your CRM or Excel file to get started
               </p>
             </div>
 
@@ -181,7 +181,7 @@ export default function AgentsPage() {
           ) : (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
               gap: 12,
             }}>
               {filtered.map((agent, i) => (
@@ -190,10 +190,9 @@ export default function AgentsPage() {
                   onClick={() => launch(agent)}
                   style={{
                     background: 'var(--bg3)',
-                    border: '1px solid var(--card-border, #E5DFD0)',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                    border: '1px solid var(--border)',
                     borderRadius: 12,
-                    padding: '13px 14px',
+                    padding: '16px',
                     cursor: 'pointer',
                     transition: 'all 0.18s',
                     position: 'relative',
@@ -217,22 +216,22 @@ export default function AgentsPage() {
 
                   {/* Icon */}
                   <div style={{
-                    width: 32, height: 32, borderRadius: 8,
-                    background: 'var(--icon-bg, #F8F6F0)',
+                    width: 38, height: 38, borderRadius: 10,
+                    background: 'var(--surface2)',
                     border: '1px solid var(--border)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 15, marginBottom: 9,
+                    fontSize: 18, marginBottom: 11,
                   }}>
                     {agent.icon}
                   </div>
 
                   {/* Name */}
-                  <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)', marginBottom: 3, paddingRight: 24, lineHeight: 1.3, fontFamily: 'var(--font-display, Syne, sans-serif)' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4, paddingRight: 24, lineHeight: 1.3, fontFamily: 'var(--font-display, Syne, sans-serif)' }}>
                     {agent.name}
                   </div>
 
                   {/* Desc */}
-                  <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.5, marginBottom: 10, minHeight: 28 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.55, marginBottom: 12, minHeight: 32 }}>
                     {agent.desc}
                   </div>
 
@@ -261,12 +260,12 @@ export default function AgentsPage() {
                         padding: '4px 12px',
                         background: 'var(--run-btn-bg, var(--accent))',
                         border: 'none',
-                        borderRadius: 6,
+                        borderRadius: 20,
                         fontSize: 11,
                         fontWeight: 700,
                         color: 'var(--btn-primary-text, #fff)',
                         cursor: 'pointer',
-                        letterSpacing: '0.02em',
+                        letterSpacing: '0.01em',
                       }}
                     >
                       Run →

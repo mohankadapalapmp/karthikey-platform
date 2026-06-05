@@ -36,8 +36,6 @@
   --topbar-shadow: none;
   --card-hover-border: #C9A84C;
   --card-hover-shadow: 0 4px 20px rgba(201,168,76,0.12);
-  --card-border: #E8E0CC;
-  --icon-bg: #F8F6F2;
   --card-feat-bg: linear-gradient(135deg,#FFFBF0,#FFF8E0);
   --card-feat-border: #EAD08C;
   --sidebar-active-bar: #C9A84C;
@@ -71,8 +69,6 @@
   --dept-active-count-text: #8B6218;
   --run-btn-bg: linear-gradient(135deg,#C9A84C,#A07830);
   --card-hover-shadow: 0 4px 20px rgba(201,168,76,0.12);
-  --card-border: #E8E0CC;
-  --icon-bg: #F8F6F2;
   --run-btn-text: #fff;
   --run-btn-radius: 20px;
   --topbar-border: #EDE8DC;
