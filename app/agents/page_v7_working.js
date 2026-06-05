@@ -229,7 +229,18 @@ export default function AgentsPage() {
             </div>
           </div>
 
-
+          {/* Filter tabs */}
+          <div style={S.filterBar}>
+            {Object.keys(DEPT_META).map(d => (
+              <button
+                key={d}
+                onClick={() => setDept(d)}
+                style={{...S.filterTab, ...(dept===d ? S.filterTabActive : {})}}
+              >
+                {DEPT_META[d].label || d} {counts[d] > 0 && <span style={{opacity:0.6}}>({counts[d]})</span>}
+              </button>
+            ))}
+          </div>
 
           {/* Privacy notice */}
           <div style={S.notice}>

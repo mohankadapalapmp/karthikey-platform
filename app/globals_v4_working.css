@@ -674,31 +674,3 @@ body {
   border-radius: 4px;
 }
 .k-signout:hover { color: var(--text); }
-
-/* ============ GLOBAL BASE ============ */
-*, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif;
-  background: #F4F6F9;
-  color: #1E293B;
-}
-a { text-decoration: none; }
-
-/* Page wrapper — used by pages that don't have their own sidebar */
-.page-wrap {
-  min-height: 100vh;
-  background: #F4F6F9;
-}
-.page-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 32px 28px;
-}
-
-/* Dashboard / pricing / profile pages */
-.dash-page {
-  background: #F4F6F9;
-  min-height: calc(100vh - 52px);
-  padding: 28px;
-}
