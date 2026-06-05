@@ -3,271 +3,267 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { AGENTS, DEPTS } from '../../lib/agents'
-import Topbar from '../../components/Topbar'
+import Link from 'next/link'
 
 const DEPT_META = {
-  All:       { icon: '✦', label: 'All Agents' },
-  Sales:     { icon: '🎯', label: 'Sales' },
-  Service:   { icon: '🤝', label: 'Service' },
-  Marketing: { icon: '📣', label: 'Marketing' },
-  Ops:       { icon: '⚙️', label: 'Operations' },
-  Finance:   { icon: '💰', label: 'Finance' },
-  HR:        { icon: '👥', label: 'HR' },
+  All:       { icon: '▦',  label: 'All Agents',  count_key: 'all' },
+  Sales:     { icon: '◎',  label: 'Sales' },
+  Service:   { icon: '◈',  label: 'Service' },
+  Marketing: { icon: '◉',  label: 'Marketing' },
+  Ops:       { icon: '◧',  label: 'Operations' },
+  Finance:   { icon: '◐',  label: 'Finance' },
+  HR:        { icon: '◑',  label: 'HR' },
+}
+
+const S = {
+  wrap: { display:'flex', height:'100vh', fontFamily:'"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', background:'#F4F6F9' },
+
+  // Sidebar
+  sidebar: { width:220, minWidth:220, background:'#0D1B3E', display:'flex', flexDirection:'column', height:'100vh', position:'sticky', top:0 },
+  sidebarTop: { padding:'20px 16px 16px', borderBottom:'1px solid rgba(255,255,255,0.08)' },
+  logoWrap: { display:'flex', alignItems:'center', gap:8 },
+  logoBox: { background:'#1565C0', borderRadius:6, padding:'4px 8px', fontSize:13, fontWeight:800, color:'#fff', letterSpacing:'0.02em' },
+  logoText: { fontSize:11, fontWeight:600, color:'rgba(255,255,255,0.4)', letterSpacing:'0.12em', marginTop:2 },
+  sidebarSection: { padding:'16px 10px 4px', fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.25)', letterSpacing:'0.12em', textTransform:'uppercase' },
+  deptItem: { display:'flex', alignItems:'center', gap:10, padding:'8px 12px', borderRadius:6, cursor:'pointer', margin:'1px 8px', transition:'all 0.12s', color:'rgba(255,255,255,0.55)', fontSize:13 },
+  deptItemActive: { background:'rgba(21,101,192,0.35)', color:'#fff', borderLeft:'3px solid #1565C0' },
+  deptCount: { marginLeft:'auto', fontSize:10, fontWeight:700, background:'rgba(255,255,255,0.1)', borderRadius:10, padding:'1px 7px', color:'rgba(255,255,255,0.4)' },
+  deptCountActive: { background:'rgba(21,101,192,0.5)', color:'#90CAF9' },
+  sidebarBottom: { marginTop:'auto', padding:'14px 16px', borderTop:'1px solid rgba(255,255,255,0.08)' },
+  privacyBadge: { display:'flex', alignItems:'center', gap:7, fontSize:11, color:'rgba(255,255,255,0.35)' },
+
+  // Topbar
+  topbar: { height:52, background:'#fff', borderBottom:'1px solid #E2E8F0', display:'flex', alignItems:'center', padding:'0 24px', gap:0, boxShadow:'0 1px 3px rgba(0,0,0,0.06)' },
+  breadcrumb: { fontSize:13, color:'#94A3B8', display:'flex', alignItems:'center', gap:8 },
+  breadcrumbActive: { color:'#1E293B', fontWeight:600 },
+  topbarRight: { marginLeft:'auto', display:'flex', alignItems:'center', gap:10 },
+  searchBar: { display:'flex', alignItems:'center', gap:8, background:'#F8FAFC', border:'1px solid #E2E8F0', borderRadius:8, padding:'7px 14px', width:260 },
+  addBtn: { display:'flex', alignItems:'center', gap:6, background:'#1565C0', color:'#fff', border:'none', borderRadius:7, padding:'7px 16px', fontSize:13, fontWeight:600, cursor:'pointer' },
+  creditPill: { display:'flex', alignItems:'center', gap:6, background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:20, padding:'5px 12px', fontSize:12, fontWeight:600, color:'#1D4ED8' },
+  avatar: { width:32, height:32, borderRadius:'50%', background:'#1565C0', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, color:'#fff', cursor:'pointer', textDecoration:'none' },
+
+  // Content
+  content: { flex:1, display:'flex', flexDirection:'column', overflow:'hidden' },
+  contentBody: { flex:1, overflowY:'auto', padding:'24px 28px' },
+  pageHeader: { display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:20 },
+  pageTitle: { fontSize:22, fontWeight:700, color:'#0F172A', letterSpacing:'-0.02em', margin:0 },
+  pageSubtitle: { fontSize:13, color:'#64748B', marginTop:4 },
+
+  // Filter tabs
+  filterBar: { display:'flex', alignItems:'center', gap:8, marginBottom:20 },
+  filterTab: { padding:'5px 14px', borderRadius:20, border:'1px solid #E2E8F0', background:'#fff', fontSize:12, fontWeight:500, color:'#64748B', cursor:'pointer', transition:'all 0.12s' },
+  filterTabActive: { background:'#EFF6FF', borderColor:'#BFDBFE', color:'#1D4ED8', fontWeight:600 },
+
+  // Privacy notice
+  notice: { display:'flex', alignItems:'center', gap:10, background:'#EFF6FF', border:'1px solid #BFDBFE', borderRadius:8, padding:'10px 16px', fontSize:12, color:'#1D4ED8', marginBottom:20 },
+
+  // Grid
+  grid: { display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(210px, 1fr))', gap:12 },
+
+  // Card
+  card: { background:'#fff', border:'1px solid #E2E8F0', borderRadius:10, padding:'16px', cursor:'pointer', transition:'all 0.15s', position:'relative', boxShadow:'0 1px 3px rgba(0,0,0,0.04)' },
+  cardIcon: { width:36, height:36, borderRadius:8, background:'#EFF6FF', border:'1px solid #DBEAFE', display:'flex', alignItems:'center', justifyContent:'center', fontSize:17, marginBottom:10 },
+  cardName: { fontSize:13, fontWeight:700, color:'#0F172A', marginBottom:3, lineHeight:1.3 },
+  cardDesc: { fontSize:11, color:'#94A3B8', lineHeight:1.55, marginBottom:12, minHeight:30 },
+  cardFooter: { display:'flex', alignItems:'center', justifyContent:'space-between' },
+  tagQuick: { fontSize:10, padding:'2px 8px', borderRadius:4, background:'#F0FDF4', color:'#15803D', border:'1px solid #BBF7D0', fontWeight:600 },
+  tagAdv: { fontSize:10, padding:'2px 8px', borderRadius:4, background:'#FFF7ED', color:'#C2410C', border:'1px solid #FED7AA', fontWeight:600 },
+  tagBuilt: { fontSize:10, padding:'2px 8px', borderRadius:4, background:'#EFF6FF', color:'#1D4ED8', border:'1px solid #BFDBFE', fontWeight:600 },
+  runBtn: { background:'#1565C0', color:'#fff', border:'none', borderRadius:6, padding:'5px 14px', fontSize:11, fontWeight:700, cursor:'pointer', letterSpacing:'0.01em' },
+  creditBadge: { position:'absolute', top:12, right:12, fontSize:10, color:'#94A3B8', fontWeight:600 },
 }
 
 export default function AgentsPage() {
   const router = useRouter()
   const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
   const [dept, setDept] = useState('All')
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setUser(data?.session?.user || null))
+    supabase.auth.getSession().then(({ data }) => {
+      const u = data?.session?.user
+      setUser(u)
+      if (u) supabase.from('accounts').select('full_name,credits').eq('id', u.id).single().then(({ data: acc }) => setProfile(acc))
+    })
   }, [])
 
   const unique = AGENTS.filter((a, i, arr) => arr.findIndex(x => x.id === a.id) === i)
   const filtered = unique
     .filter(a => dept === 'All' || a.dept === dept)
-    .filter(a => !search || a.name.toLowerCase().includes(search.toLowerCase()) || a.desc.toLowerCase().includes(search.toLowerCase()))
+    .filter(a => !search || a.name.toLowerCase().includes(search.toLowerCase()) || (a.desc||'').toLowerCase().includes(search.toLowerCase()))
 
-  const counts = ['All', ...Object.keys(DEPT_META).filter(d => d !== 'All')].reduce((acc, d) => {
+  const counts = Object.keys(DEPT_META).reduce((acc, d) => {
     acc[d] = d === 'All' ? unique.length : unique.filter(a => a.dept === d).length
     return acc
   }, {})
 
-  const deptList = Object.keys(DEPT_META)
+  const initials = profile?.full_name ? profile.full_name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2) : user?.email?.[0]?.toUpperCase() || 'K'
 
   function launch(agent) {
     if (!user) { router.push('/login'); return }
     router.push(`/agents/${agent.id}`)
   }
 
-  const currentDept = DEPT_META[dept]
+  async function signOut() {
+    await supabase.auth.signOut()
+    window.location.href = '/'
+  }
 
   return (
-    <>
-      <Topbar />
-      <div style={{ display: 'flex', height: 'calc(100vh - 52px)', background: 'var(--bg)', overflow: 'hidden' }}>
+    <div style={S.wrap}>
 
-        {/* Sidebar */}
-        <aside style={{
-          width: 210,
-          minWidth: 210,
-          borderRight: '1px solid var(--border)',
-          background: 'var(--bg2)',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: '16px 10px',
-          gap: 2,
-          overflowY: 'auto',
-        }}>
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text4)', textTransform: 'uppercase', padding: '4px 8px 8px' }}>
-            Departments
+      {/* Sidebar */}
+      <aside style={S.sidebar}>
+        <div style={S.sidebarTop}>
+          <div style={S.logoWrap}>
+            <div style={S.logoBox}>KARTHI<span style={{color:'#90CAF9'}}>KEY</span></div>
           </div>
+          <div style={{...S.logoText, marginTop:6}}>AI AGENT PLATFORM</div>
+        </div>
 
-          {deptList.map(d => {
-            const isActive = dept === d
-            return (
-              <div
-                key={d}
-                onClick={() => setDept(d)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '7px 9px',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  background: isActive ? 'var(--surface2)' : 'transparent',
-                  border: isActive ? '1px solid var(--border2)' : '1px solid transparent',
-                  position: 'relative',
-                  transition: 'all 0.15s',
-                }}
-              >
-                {isActive && (
-                  <div style={{
-                    position: 'absolute',
-                    left: 0, top: '20%', height: '60%',
-                    width: 3, borderRadius: '0 2px 2px 0',
-                    background: 'var(--accent)',
-                  }} />
-                )}
-                <div style={{
-                  width: 28, height: 28, borderRadius: 7,
-                  background: isActive ? 'var(--surface3)' : 'var(--bg3)',
-                  border: `1px solid ${isActive ? 'var(--border2)' : 'var(--border)'}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 14,
-                }}>
-                  {DEPT_META[d]?.icon}
-                </div>
-                <div style={{ flex: 1, fontSize: 12.5, fontWeight: isActive ? 600 : 400, color: isActive ? 'var(--text)' : 'var(--text2)' }}>
-                  {DEPT_META[d]?.label || d}
-                </div>
-                <div style={{
-                  fontSize: 10, padding: '1px 6px', borderRadius: 10,
-                  background: isActive ? 'var(--surface3)' : 'var(--bg)',
-                  border: `1px solid ${isActive ? 'var(--border2)' : 'var(--border)'}`,
-                  color: isActive ? 'var(--accent)' : 'var(--text4)',
-                  fontWeight: 600,
-                }}>
-                  {counts[d] || 0}
-                </div>
-              </div>
-            )
-          })}
+        <div style={S.sidebarSection}>Agents</div>
 
-          <div style={{ flex: 1 }} />
-
-          {/* Privacy badge */}
-          <div style={{ padding: '10px 8px', borderTop: '1px solid var(--border)', marginTop: 8 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text4)', marginBottom: 5, textTransform: 'uppercase' }}>Data privacy</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              <span style={{ fontSize: 11, color: 'var(--text2)', lineHeight: 1.4 }}>Browser-only processing</span>
+        {Object.keys(DEPT_META).map(d => {
+          const isActive = dept === d
+          return (
+            <div
+              key={d}
+              onClick={() => setDept(d)}
+              style={{
+                ...S.deptItem,
+                ...(isActive ? S.deptItemActive : {}),
+                marginLeft: isActive ? 5 : 8,
+              }}
+            >
+              <span style={{fontSize:11, opacity:0.6}}>{DEPT_META[d].icon}</span>
+              <span style={{flex:1}}>{DEPT_META[d].label || d}</span>
+              <span style={{...S.deptCount, ...(isActive ? S.deptCountActive : {})}}>{counts[d]}</span>
             </div>
+          )
+        })}
+
+        <div style={S.sidebarSection}>Settings</div>
+        <Link href="/profile" style={{...S.deptItem, textDecoration:'none'}} >
+          <span style={{fontSize:11, opacity:0.6}}>◎</span>
+          <span style={{flex:1}}>Profile & Theme</span>
+        </Link>
+        <Link href="/credits" style={{...S.deptItem, textDecoration:'none'}}>
+          <span style={{fontSize:11, opacity:0.6}}>◈</span>
+          <span style={{flex:1}}>Credits & Billing</span>
+        </Link>
+        {user && (
+          <button onClick={signOut} style={{...S.deptItem, background:'none', border:'none', cursor:'pointer', width:'100%', textAlign:'left'}}>
+            <span style={{fontSize:11, opacity:0.6}}>↪</span>
+            <span style={{flex:1}}>Sign out</span>
+          </button>
+        )}
+
+        <div style={S.sidebarBottom}>
+          <div style={S.privacyBadge}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Browser-only data processing
           </div>
-        </aside>
+        </div>
+      </aside>
 
-        {/* Main content */}
-        <main style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
+      {/* Main */}
+      <div style={S.content}>
 
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <div>
-              <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-display, Syne, sans-serif)', margin: 0 }}>
-                {dept === 'All' ? 'AI Agent Marketplace' : (currentDept?.label || dept) + ' Agents'}
-              </h1>
-              <p style={{ fontSize: 12, color: 'var(--text3)', margin: '3px 0 0' }}>
-                {dept === 'All' ? '52 agents across 6 departments — any industry, any CRM, any Excel' : filtered.length + ' agents · upload your CRM or Excel file to get started'}
-              </p>
-            </div>
-
-            {/* Search */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: 'var(--bg3)',
-              border: '1px solid var(--border)',
-              borderRadius: 8, padding: '7px 13px',
-              width: 220,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text4)" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        {/* Topbar */}
+        <header style={S.topbar}>
+          <div style={S.breadcrumb}>
+            <span>Karthikey AI</span>
+            <span style={{color:'#CBD5E1'}}>›</span>
+            <span style={S.breadcrumbActive}>Agent Marketplace</span>
+          </div>
+          <div style={S.topbarRight}>
+            <div style={S.searchBar}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search agents..."
-                style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 12.5, color: 'var(--text)', width: '100%', fontFamily: 'inherit' }}
+                style={{border:'none', outline:'none', background:'transparent', fontSize:13, color:'#1E293B', width:'100%', fontFamily:'inherit'}}
               />
             </div>
+            {user ? (
+              <>
+                <div style={S.creditPill}>
+                  ★ {profile?.credits ?? '…'} credits
+                </div>
+                <Link href="/credits" style={{...S.addBtn, textDecoration:'none'}}>+ Buy credits</Link>
+                <Link href="/profile" style={{...S.avatar, textDecoration:'none'}}>{initials}</Link>
+              </>
+            ) : (
+              <>
+                <Link href="/login" style={{...S.addBtn, background:'#F8FAFC', color:'#1E293B', border:'1px solid #E2E8F0', textDecoration:'none'}}>Login</Link>
+                <Link href="/login?signup=1" style={{...S.addBtn, textDecoration:'none'}}>Get started free</Link>
+              </>
+            )}
+          </div>
+        </header>
+
+        {/* Body */}
+        <div style={S.contentBody}>
+
+          {/* Page header */}
+          <div style={S.pageHeader}>
+            <div>
+              <h1 style={S.pageTitle}>
+                {dept === 'All' ? 'AI Agent Marketplace' : `${DEPT_META[dept]?.label || dept} Agents`}
+              </h1>
+              <p style={S.pageSubtitle}>
+                {dept === 'All'
+                  ? '52 agents across 6 departments — works with any industry, any CRM, any Excel file'
+                  : `${filtered.length} agents · upload your CRM or Excel file to get started`}
+              </p>
+            </div>
+          </div>
+
+          {/* Filter tabs */}
+          <div style={S.filterBar}>
+            {Object.keys(DEPT_META).map(d => (
+              <button
+                key={d}
+                onClick={() => setDept(d)}
+                style={{...S.filterTab, ...(dept===d ? S.filterTabActive : {})}}
+              >
+                {DEPT_META[d].label || d} {counts[d] > 0 && <span style={{opacity:0.6}}>({counts[d]})</span>}
+              </button>
+            ))}
           </div>
 
           {/* Privacy notice */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            background: 'var(--accent-bg)', border: '1px solid var(--border2)',
-            borderRadius: 8, padding: '9px 14px', fontSize: 12, color: 'var(--accent2)',
-            marginBottom: 20,
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div style={S.notice}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             Your data never leaves your browser — we only handle credits, not your CRM data. Works for any industry.
           </div>
 
-          {/* Agent grid */}
+          {/* Grid */}
           {filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text3)' }}>
-              No agents found for "{search}"
-            </div>
+            <div style={{textAlign:'center', padding:'60px 20px', color:'#94A3B8'}}>No agents found for "{search}"</div>
           ) : (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(175px, 1fr))',
-              gap: 12,
-            }}>
+            <div style={S.grid}>
               {filtered.map((agent, i) => (
                 <div
                   key={agent.id + i}
                   onClick={() => launch(agent)}
-                  style={{
-                    background: 'var(--bg3)',
-                    border: '1px solid var(--card-border, #E5DFD0)',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                    borderRadius: 12,
-                    padding: '13px 14px',
-                    cursor: 'pointer',
-                    transition: 'all 0.18s',
-                    position: 'relative',
-                    overflow: 'hidden',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = 'var(--card-hover-border)'
-                    e.currentTarget.style.boxShadow = 'var(--card-hover-shadow, 0 4px 20px rgba(201,168,76,0.1))'
-                    e.currentTarget.style.transform = 'translateY(-1px)'
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = 'var(--border)'
-                    e.currentTarget.style.boxShadow = 'none'
-                    e.currentTarget.style.transform = 'translateY(0)'
-                  }}
+                  style={S.card}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor='#93C5FD'; e.currentTarget.style.boxShadow='0 4px 16px rgba(21,101,192,0.1)'; e.currentTarget.style.transform='translateY(-1px)' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor='#E2E8F0'; e.currentTarget.style.boxShadow='0 1px 3px rgba(0,0,0,0.04)'; e.currentTarget.style.transform='translateY(0)' }}
                 >
-                  {/* Credit badge */}
-                  <div style={{ position: 'absolute', top: 12, right: 12, fontSize: 10, color: 'var(--text4)', fontWeight: 600 }}>
-                    {agent.credits} cr
-                  </div>
-
-                  {/* Icon */}
-                  <div style={{
-                    width: 32, height: 32, borderRadius: 8,
-                    background: 'var(--icon-bg, #F8F6F0)',
-                    border: '1px solid var(--border)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 15, marginBottom: 9,
-                  }}>
-                    {agent.icon}
-                  </div>
-
-                  {/* Name */}
-                  <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)', marginBottom: 3, paddingRight: 24, lineHeight: 1.3, fontFamily: 'var(--font-display, Syne, sans-serif)' }}>
-                    {agent.name}
-                  </div>
-
-                  {/* Desc */}
-                  <div style={{ fontSize: 11, color: 'var(--text3)', lineHeight: 1.5, marginBottom: 10, minHeight: 28 }}>
-                    {agent.desc}
-                  </div>
-
-                  {/* Footer */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{
-                      fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 600,
-                      background: agent.tier === 'Built'
-                        ? 'var(--tag-accent-bg)'
-                        : agent.credits > 1
-                        ? 'var(--bg2)'
-                        : '#F0FDF4',
-                      color: agent.tier === 'Built'
-                        ? 'var(--tag-accent-text)'
-                        : agent.credits > 1
-                        ? 'var(--text3)'
-                        : '#166534',
-                      border: `1px solid ${agent.tier === 'Built' ? 'var(--tag-accent-border)' : agent.credits > 1 ? 'var(--border)' : '#BBF7D0'}`,
-                    }}>
+                  <div style={S.creditBadge}>{agent.credits} cr</div>
+                  <div style={S.cardIcon}>{agent.icon}</div>
+                  <div style={S.cardName}>{agent.name}</div>
+                  <div style={S.cardDesc}>{agent.desc}</div>
+                  <div style={S.cardFooter}>
+                    <span style={agent.tier === 'Built' ? S.tagBuilt : agent.credits > 1 ? S.tagAdv : S.tagQuick}>
                       {agent.tier === 'Built' ? 'Built-in' : agent.credits > 1 ? 'Advanced' : 'Quick'}
                     </span>
-
                     <button
                       onClick={e => { e.stopPropagation(); launch(agent) }}
-                      style={{
-                        padding: '4px 12px',
-                        background: 'var(--run-btn-bg, var(--accent))',
-                        border: 'none',
-                        borderRadius: 6,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: 'var(--btn-primary-text, #fff)',
-                        cursor: 'pointer',
-                        letterSpacing: '0.02em',
-                      }}
+                      style={S.runBtn}
                     >
                       Run →
                     </button>
@@ -276,8 +272,8 @@ export default function AgentsPage() {
               ))}
             </div>
           )}
-        </main>
+        </div>
       </div>
-    </>
+    </div>
   )
 }
