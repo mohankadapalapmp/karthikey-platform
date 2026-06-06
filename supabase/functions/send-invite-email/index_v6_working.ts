@@ -11,7 +11,7 @@ serve(async (req) => {
   try {
     const { inviteToken, orgName, invitedEmail, inviterName, role, appUrl } = await req.json()
 
-    const inviteUrl = `${appUrl}/org/invite/${inviteToken}`
+    const inviteUrl = `${appUrl}/api/accept-invite?token=${inviteToken}`
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 
     const emailHtml = `

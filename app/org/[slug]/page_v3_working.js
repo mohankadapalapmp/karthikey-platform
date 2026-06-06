@@ -153,26 +153,26 @@ export default function OrgDashboardPage() {
           <div style={{ maxWidth: 1120, margin: '0 auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 44, height: 44, background: '#0D1B3E', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#ffffff' }}>
+                <div style={{ width: 44, height: 44, background: '#0D1B3E', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#C9A84C' }}>
                   {org?.name?.[0]?.toUpperCase()}
                 </div>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <h1 style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.02em' }}>{org?.name}</h1>
-                    {isAdmin && <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 20, background: '#1565C0', color: '#ffffff' }}>Admin</span>}
+                    {isAdmin && <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 20, background: '#0D1B3E', color: '#C9A84C' }}>Admin</span>}
                   </div>
                   <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>agents.karthikey.in/org/{slug} · {members.length} member{members.length !== 1 ? 's' : ''}</p>
                 </div>
               </div>
               {isAdmin && (
-                <Link href="/credits" className="btn-primary" style={{ fontSize: 13, padding: '8px 16px' }}>+ Buy credits for team</Link>
+                <Link href="/credits" className="btn-gold" style={{ fontSize: 13, padding: '8px 16px' }}>+ Buy credits for team</Link>
               )}
             </div>
 
             {/* Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 20 }}>
               {[
-                { label: 'Org credits', val: org?.credits ?? 0, color: '#1565C0' },
+                { label: 'Org credits', val: org?.credits ?? 0, color: '#C9A84C' },
                 { label: 'Members', val: members.length, color: 'var(--text)' },
                 { label: 'Credits used', val: totalUsed, color: 'var(--text)' },
                 { label: 'Agent runs', val: usage.length, color: 'var(--text)' },
@@ -230,7 +230,7 @@ export default function OrgDashboardPage() {
                         </div>
                       </td>
                       <td style={{ padding: '12px 20px' }}>
-                        <span style={{ fontSize: 11.5, fontWeight: 500, padding: '3px 8px', borderRadius: 20, background: m.role === 'admin' ? '#1565C0' : '#EEF3FB', color: m.role === 'admin' ? '#ffffff' : '#1565C0' }}>
+                        <span style={{ fontSize: 11.5, fontWeight: 500, padding: '3px 8px', borderRadius: 20, background: m.role === 'admin' ? '#0D1B3E' : '#F3F4F7', color: m.role === 'admin' ? '#C9A84C' : 'var(--text-muted)' }}>
                           {m.role}
                         </span>
                       </td>
@@ -303,7 +303,7 @@ export default function OrgDashboardPage() {
                         <span style={{ color: 'var(--text-muted)' }}>{m.used}</span>
                       </div>
                       <div style={{ height: 5, background: 'var(--divider)', borderRadius: 3, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: totalUsed > 0 ? `${(m.used / totalUsed) * 100}%` : '0%', background: '#1565C0', borderRadius: 3 }} />
+                        <div style={{ height: '100%', width: totalUsed > 0 ? `${(m.used / totalUsed) * 100}%` : '0%', background: '#0D1B3E', borderRadius: 3 }} />
                       </div>
                     </div>
                   </div>
