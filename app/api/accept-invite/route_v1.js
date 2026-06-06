@@ -40,8 +40,7 @@ export async function GET(request) {
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session?.user) {
-      // Redirect to the invite page (not the API route) so client-side router works correctly after login
-      const redirectUrl = encodeURIComponent(`/org/invite/${token}`)
+      const redirectUrl = encodeURIComponent(`/api/accept-invite?token=${token}`)
       return NextResponse.redirect(new URL(`/login?redirect=${redirectUrl}`, request.url))
     }
 

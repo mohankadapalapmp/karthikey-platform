@@ -59,10 +59,11 @@ export default function LoginForm() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--navy)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <Link href="/" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
-        <div style={{ background: '#1565C0', borderRadius: 5, padding: '6px 14px', display: 'inline-flex', alignItems: 'center' }}>
-          <span style={{ fontSize: 17, fontWeight: 800, color: '#ffffff', letterSpacing: '0.08em' }}>KARTHI</span>
-          <span style={{ fontSize: 17, fontWeight: 800, color: '#90CAF9', letterSpacing: '0.08em' }}>KEY</span>
+      <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }}>
+        <div style={{ width: 40, height: 40, background: 'var(--gold)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 20, color: 'var(--navy)' }}>K</div>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--gold)', letterSpacing: '0.05em' }}>KARTHIKEY</div>
+          <div style={{ fontSize: 11, color: 'var(--muted)' }}>AI Agent Platform</div>
         </div>
       </Link>
 

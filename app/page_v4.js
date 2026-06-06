@@ -185,15 +185,15 @@ export default function Home() {
               </div>
               <div style={{ background: 'var(--navy)', borderRadius: 14, padding: '24px', color: '#fff' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                  <div style={{ width: 36, height: 36, background: '#90CAF9', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#0D1B3E', fontSize: 14 }}>K</div>
+                  <div style={{ width: 36, height: 36, background: '#C9A84C', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#0D1B3E', fontSize: 14 }}>K</div>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#90CAF9' }}>Karthikey Org</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#C9A84C' }}>Karthikey Org</p>
                     <p style={{ fontSize: 11, color: '#8FA3C8' }}>agents.karthikey.in/org/karthikey</p>
                   </div>
-                  <div style={{ marginLeft: 'auto', background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: 20, padding: '3px 10px', fontSize: 11, color: '#90CAF9' }}>250 org credits</div>
+                  <div style={{ marginLeft: 'auto', background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: 20, padding: '3px 10px', fontSize: 11, color: '#C9A84C' }}>250 org credits</div>
                 </div>
                 {[
-                  { name: 'Priya Sharma', role: 'Admin', used: 34, color: '#90CAF9' },
+                  { name: 'Priya Sharma', role: 'Admin', used: 34, color: '#C9A84C' },
                   { name: 'Rahul Mehta', role: 'Member', used: 28, color: '#8FA3C8' },
                   { name: 'Ananya Iyer', role: 'Member', used: 18, color: '#8FA3C8' },
                   { name: 'Vikram Nair', role: 'Member', used: 12, color: '#8FA3C8' },
@@ -214,7 +214,7 @@ export default function Home() {
                     <span>Pool used</span><span>92 / 342 credits</span>
                   </div>
                   <div style={{ height: 5, background: 'rgba(255,255,255,0.1)', borderRadius: 3 }}>
-                    <div style={{ width: '27%', height: '100%', background: '#90CAF9', borderRadius: 3 }} />
+                    <div style={{ width: '27%', height: '100%', background: '#C9A84C', borderRadius: 3 }} />
                   </div>
                 </div>
               </div>

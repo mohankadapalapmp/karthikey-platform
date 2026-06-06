@@ -126,10 +126,8 @@ export default function AcceptInvitePage() {
       <div style={{ width: '100%', maxWidth: 420 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ background: '#1565C0', borderRadius: 5, padding: '6px 14px', display: 'inline-flex', alignItems: 'center', margin: '0 auto 12px' }}>
-            <span style={{ fontSize: 17, fontWeight: 800, color: '#ffffff', letterSpacing: '0.08em' }}>KARTHI</span>
-            <span style={{ fontSize: 17, fontWeight: 800, color: '#90CAF9', letterSpacing: '0.08em' }}>KEY</span>
-          </div>
+          <div style={{ width: 48, height: 48, background: '#0D1B3E', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: 22, fontWeight: 700, color: '#C9A84C' }}>K</div>
+          <p style={{ fontSize: 13, fontWeight: 600, color: '#C9A84C', letterSpacing: '0.04em' }}>KARTHIKEY</p>
         </div>
 
         {error ? (
