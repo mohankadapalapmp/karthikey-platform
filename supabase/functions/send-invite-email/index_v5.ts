@@ -26,9 +26,8 @@ serve(async (req) => {
         <!-- Header -->
         <tr>
           <td style="background:#0D1B3E;padding:28px 32px;text-align:center;">
-            <div style="display:inline-block;background:#1565C0;border-radius:5px;padding:7px 16px;">
-              <span style="font-family:Arial Black,Arial,sans-serif;font-size:17px;font-weight:900;color:#ffffff;letter-spacing:0.06em;">KARTHI</span><span style="font-family:Arial Black,Arial,sans-serif;font-size:17px;font-weight:900;color:#90CAF9;letter-spacing:0.06em;">KEY</span>
-            </div>
+            <div style="width:44px;height:44px;background:#C9A84C;border-radius:10px;display:inline-block;font-size:22px;font-weight:700;color:#0D1B3E;line-height:44px;text-align:center;">K</div>
+            <p style="margin:10px 0 0;font-size:13px;font-weight:600;color:#C9A84C;letter-spacing:0.08em;">KARTHIKEY AI</p>
           </td>
         </tr>
 
@@ -63,7 +62,7 @@ serve(async (req) => {
             <!-- CTA Button -->
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr><td align="center">
-                <a href="${inviteUrl}" style="display:inline-block;background:#1565C0;color:#ffffff;text-decoration:none;padding:13px 32px;border-radius:8px;font-size:14px;font-weight:600;letter-spacing:0.01em;">
+                <a href="${inviteUrl}" style="display:inline-block;background:#0D1B3E;color:#C9A84C;text-decoration:none;padding:13px 32px;border-radius:8px;font-size:14px;font-weight:600;">
                   Accept invitation →
                 </a>
               </td></tr>

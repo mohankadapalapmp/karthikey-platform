@@ -111,7 +111,7 @@ export default function Home() {
               <Link href="/login?signup=1" className="btn-gold" style={{ padding: '13px 28px', fontSize: 15, borderRadius: 8 }}>
                 Start free — 5 credits included
               </Link>
-              <Link href="/agents" style={{ padding: '13px 28px', fontSize: 15, borderRadius: 8, color: '#fff', border: '1.5px solid rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.08)', textDecoration: 'none', fontWeight: 500, backdropFilter: 'blur(4px)' }}>
+              <Link href="/agents" className="btn-outline" style={{ padding: '13px 28px', fontSize: 15, borderRadius: 8, color: 'var(--muted)', borderColor: 'var(--border)' }}>
                 Browse all agents →
               </Link>
             </div>
