@@ -47,7 +47,7 @@ export default function AcceptInvitePage() {
 
     // If user is already logged in when page loads, auto-accept
     if (currentUser && inv.status === 'pending') {
-      // Auto-accept immediately
+      // Small delay to ensure state is set
       setTimeout(async () => {
         try {
           const { error: memberErr } = await supabase.from('org_members').insert({
@@ -68,7 +68,7 @@ export default function AcceptInvitePage() {
         } catch (err) {
           console.error('Auto-accept error:', err)
         }
-      }, 0)
+      }, 500)
     }
   }
 
@@ -115,13 +115,9 @@ export default function AcceptInvitePage() {
     }
   }
 
-  if (loading || (user && invite && !done && !error)) return (
-    <div style={{ minHeight: '100vh', background: '#F4F6F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 44, height: 44, border: '3px solid #E2E8F0', borderTopColor: '#1565C0', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
-        <p style={{ color: '#64748B', fontSize: 14 }}>{loading ? 'Loading invite…' : `Joining ${org?.name || 'your team'}…`}</p>
-        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-      </div>
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: '#F7F8FA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
+      <p style={{ color: '#6B7280', fontSize: 14 }}>Loading invite…</p>
     </div>
   )
 
@@ -140,7 +136,7 @@ export default function AcceptInvitePage() {
           <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 14, padding: '24px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
             <p style={{ fontSize: 15, fontWeight: 500, color: '#111827', marginBottom: 8 }}>Invalid invite</p>
             <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 20 }}>{error}</p>
-            <Link href="/" style={{ display: 'inline-block', background: '#1565C0', color: '#ffffff', padding: '9px 20px', borderRadius: 6, fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>Go to homepage</Link>
+            <Link href="/" style={{ display: 'inline-block', background: '#0D1B3E', color: '#C9A84C', padding: '9px 20px', borderRadius: 6, fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>Go to homepage</Link>
           </div>
         ) : done ? (
           <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: 14, padding: '24px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
@@ -180,14 +176,14 @@ export default function AcceptInvitePage() {
 
             {user ? (
               <button onClick={acceptInvite} disabled={accepting}
-                style={{ width: '100%', padding: '11px', background: '#1565C0', color: '#ffffff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: accepting ? 'not-allowed' : 'pointer' }}>
+                style={{ width: '100%', padding: '11px', background: '#0D1B3E', color: '#C9A84C', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: accepting ? 'not-allowed' : 'pointer' }}>
                 {accepting ? 'Joining…' : `Join ${org?.name} →`}
               </button>
             ) : (
               <div>
                 <p style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', marginBottom: 12 }}>Sign in to accept this invite</p>
                 <button onClick={acceptInvite}
-                  style={{ width: '100%', padding: '11px', background: '#1565C0', color: '#ffffff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  style={{ width: '100%', padding: '11px', background: '#0D1B3E', color: '#C9A84C', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
                   Sign in & join {org?.name} →
                 </button>
               </div>
