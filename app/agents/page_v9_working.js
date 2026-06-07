@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 import { AGENTS, DEPTS } from '../../lib/agents'
@@ -79,10 +79,6 @@ export default function AgentsPage() {
   const [profile, setProfile] = useState(null)
   const [dept, setDept] = useState('All')
   const [search, setSearch] = useState('')
-  const [nlResults, setNlResults] = useState(null)   // null = not active, [] = no results, [...] = matches
-  const [nlLoading, setNlLoading] = useState(false)
-  const [nlError, setNlError] = useState(false)
-  const debounceRef = useRef(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -92,58 +88,10 @@ export default function AgentsPage() {
     })
   }, [])
 
-
-  // ── NL Search via Claude API ──────────────────────────────
-  const runNlSearch = useCallback(async (query) => {
-    if (!query || query.trim().length < 3) { setNlResults(null); setNlError(false); return }
-    setNlLoading(true); setNlError(false)
-    try {
-      const agentList = AGENTS.map(a =>
-        `id:${a.id} | name:${a.name} | dept:${a.dept} | desc:${a.desc} | keywords:${(a.keywords||[]).join(',')}`)
-        .join('\n')
-
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          system: 'You are an AI agent search assistant for Karthikey, a CRM & sales AI platform. Given a user query, return the most relevant agents from the list. Respond ONLY with a JSON array, no markdown, no explanation. Each item: {"id":"agent-id","reason":"one short sentence why this matches"}. Return max 8 results, ordered by relevance. If nothing matches well, return [].',
-          messages: [{ role: 'user', content: `Query: "${query}"\n\nAgents:\n${agentList}` }]
-        })
-      })
-      const data = await res.json()
-      const text = data?.content?.[0]?.text || '[]'
-      const matches = JSON.parse(text.replace(/```json|```/g, '').trim())
-      // Enrich with full agent data
-      const enriched = matches
-        .map(m => ({ ...AGENTS.find(a => a.id === m.id), reason: m.reason }))
-        .filter(Boolean)
-      setNlResults(enriched)
-    } catch (e) {
-      console.error('NL search failed, falling back to keyword', e)
-      setNlError(true)
-      setNlResults(null)
-    } finally {
-      setNlLoading(false)
-    }
-  }, [])
-
-  // Debounced search trigger
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (!search || search.trim().length < 3) { setNlResults(null); setNlError(false); return }
-    debounceRef.current = setTimeout(() => runNlSearch(search), 500)
-    return () => clearTimeout(debounceRef.current)
-  }, [search, runNlSearch])
-
   const unique = AGENTS.filter((a, i, arr) => arr.findIndex(x => x.id === a.id) === i)
-  // Use NL results when active, otherwise keyword filter
-  const filtered = nlResults !== null
-    ? nlResults
-    : unique
-        .filter(a => dept === 'All' || a.dept === dept)
-        .filter(a => !search || a.name.toLowerCase().includes(search.toLowerCase()) || (a.desc||'').toLowerCase().includes(search.toLowerCase()))
+  const filtered = unique
+    .filter(a => dept === 'All' || a.dept === dept)
+    .filter(a => !search || a.name.toLowerCase().includes(search.toLowerCase()) || (a.desc||'').toLowerCase().includes(search.toLowerCase()))
 
   const counts = Object.keys(DEPT_META).reduce((acc, d) => {
     acc[d] = d === 'All' ? unique.length : unique.filter(a => a.dept === d).length
@@ -243,23 +191,15 @@ export default function AgentsPage() {
             <span style={{...S.breadcrumbActive}}>Agent Marketplace</span>
           </div>
           <div style={S.topbarRight}>
-            <div style={{...S.searchBar, borderColor: nlResults !== null ? '#93C5FD' : '#E2E8F0', background: nlResults !== null ? '#EFF6FF' : '#F8FAFC'}}>
-              {nlLoading
-                ? <div style={{width:14,height:14,border:'2px solid #BFDBFE',borderTopColor:'#1565C0',borderRadius:'50%',animation:'spin 0.7s linear infinite',flexShrink:0}}/>
-                : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={nlResults !== null ? '#1565C0' : '#94A3B8'} strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              }
+            <div style={S.searchBar}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               <input
                 value={search}
-                onChange={e => { setSearch(e.target.value); if (!e.target.value) { setNlResults(null); setNlError(false) } }}
-                placeholder="Search agents... (try: 'score my leads')"
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search agents..."
                 style={{border:'none', outline:'none', background:'transparent', fontSize:13, color:'#1E293B', width:'100%', fontFamily:'inherit'}}
               />
-              {search && (
-                <button onClick={() => { setSearch(''); setNlResults(null); setNlError(false) }}
-                  style={{background:'none',border:'none',cursor:'pointer',color:'#94A3B8',fontSize:16,lineHeight:1,padding:'0 2px',flexShrink:0}}>×</button>
-              )}
             </div>
-            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
             {user ? (
               <>
                 <div style={S.creditPill}>
@@ -284,29 +224,14 @@ export default function AgentsPage() {
           <div style={S.pageHeader}>
             <div>
               <h1 style={S.pageTitle}>
-                {nlResults !== null
-                  ? 'AI Search Results'
-                  : dept === 'All' ? 'AI Agent Marketplace' : `${DEPT_META[dept]?.label || dept} Agents`}
+                {dept === 'All' ? 'AI Agent Marketplace' : `${DEPT_META[dept]?.label || dept} Agents`}
               </h1>
               <p style={S.pageSubtitle}>
-                {nlResults !== null
-                  ? `${filtered.length} agent${filtered.length !== 1 ? 's' : ''} matched for "${search}"`
-                  : dept === 'All'
-                    ? '52 agents across 6 departments — works with any industry, any CRM, any Excel file'
-                    : `${filtered.length} agents · upload your CRM or Excel file to get started`}
+                {dept === 'All'
+                  ? '52 agents across 6 departments — works with any industry, any CRM, any Excel file'
+                  : `${filtered.length} agents · upload your CRM or Excel file to get started`}
               </p>
             </div>
-            {nlResults !== null && (
-              <div style={{display:'flex',alignItems:'center',gap:6,background:'#EFF6FF',border:'1px solid #BFDBFE',borderRadius:20,padding:'5px 12px',fontSize:11,fontWeight:600,color:'#1D4ED8',flexShrink:0}}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L9 9H2l5.5 4-2 7L12 16l6.5 4-2-7L22 9h-7z"/></svg>
-                AI matched
-              </div>
-            )}
-            {nlError && (
-              <div style={{fontSize:11,color:'#92400E',background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:20,padding:'4px 10px'}}>
-                Showing keyword results
-              </div>
-            )}
           </div>
 
 
@@ -333,10 +258,10 @@ export default function AgentsPage() {
                   <div style={S.creditBadge}>{agent.credits} cr</div>
                   <div style={S.cardIcon}>{agent.icon}</div>
                   <div style={S.cardName}>{agent.name}</div>
-                  <div style={S.cardDesc}>{agent.reason || agent.desc}</div>
+                  <div style={S.cardDesc}>{agent.desc}</div>
                   <div style={S.cardFooter}>
-                    <span style={agent.badge === 'Adv' ? S.tagAdv : S.tagQuick}>
-                      {agent.badge === 'Adv' ? 'Advanced' : 'Quick'}
+                    <span style={agent.tier === 'Built' ? S.tagBuilt : agent.credits > 1 ? S.tagAdv : S.tagQuick}>
+                      {agent.tier === 'Built' ? 'Built-in' : agent.credits > 1 ? 'Advanced' : 'Quick'}
                     </span>
                     <div style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:'#94A3B8'}}>
                       Open <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
