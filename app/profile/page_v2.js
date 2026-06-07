@@ -94,7 +94,7 @@ export default function ProfilePage() {
 
         {/* Profile header */}
         <div style={{ background: 'var(--navy)', borderRadius: 16, padding: '28px 32px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 24 }}>
-          <div style={{ width: 72, height: 72, borderRadius: '50%', background: '#1565C0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 700, color: '#ffffff', flexShrink: 0 }}>
+          <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 700, color: 'var(--navy)', flexShrink: 0 }}>
             {initials}
           </div>
           <div style={{ flex: 1 }}>
@@ -113,7 +113,7 @@ export default function ProfilePage() {
               { val: totalSpent > 0 ? `₹${totalSpent}` : '₹0', label: 'Spent' },
             ].map(st => (
               <div key={st.label} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '12px 18px', textAlign: 'center', minWidth: 80 }}>
-                <div style={{ fontSize: 22, fontWeight: 600, color: '#90CAF9' }}>{st.val}</div>
+                <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--gold)' }}>{st.val}</div>
                 <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{st.label}</div>
               </div>
             ))}
@@ -126,7 +126,7 @@ export default function ProfilePage() {
             <button key={id} onClick={() => setActiveTab(id)} style={{
               padding: '7px 18px', borderRadius: 7, fontSize: 13, border: 'none', cursor: 'pointer',
               background: activeTab === id ? 'white' : 'transparent',
-              color: activeTab === id ? '#0D1B3E' : '#64748B',
+              color: activeTab === id ? 'var(--navy)' : 'var(--text-muted)',
               fontWeight: activeTab === id ? 600 : 400,
               boxShadow: activeTab === id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
             }}>{label}</button>
@@ -225,7 +225,7 @@ export default function ProfilePage() {
             <div style={{ padding: '14px 20px', borderBottom: '0.5px solid #E5E7EB', fontWeight: 600, fontSize: 15 }}>Recent agent runs</div>
             {usageLog.length === 0 ? (
               <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                No agent runs yet. <Link href="/agents" style={{ color: '#1565C0', fontWeight: 500 }}>Run your first agent →</Link>
+                No agent runs yet. <Link href="/agents" style={{ color: 'var(--navy)', fontWeight: 500 }}>Run your first agent →</Link>
               </div>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -256,7 +256,7 @@ export default function ProfilePage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
             <div className="card">
               <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 16, paddingBottom: 12, borderBottom: '0.5px solid #E5E7EB' }}>Credit balance</div>
-              <div style={{ fontSize: 48, fontWeight: 700, color: '#0D1B3E', marginBottom: 4 }}>⚡ {credits}</div>
+              <div style={{ fontSize: 48, fontWeight: 700, color: 'var(--navy)', marginBottom: 4 }}>⚡ {credits}</div>
               <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>credits remaining · never expire</div>
               <Link href="/credits" className="btn-primary" style={{ display: 'inline-block', padding: '9px 20px', fontSize: 13, borderRadius: 6 }}>+ Buy more credits</Link>
             </div>
@@ -283,7 +283,7 @@ export default function ProfilePage() {
                   { val: totalSpent > 0 ? `₹${totalSpent}` : '₹0', label: 'Total spent' },
                 ].map(st => (
                   <div key={st.label} style={{ background: '#F9FAFB', borderRadius: 10, padding: '16px 20px', textAlign: 'center' }}>
-                    <div style={{ fontSize: 28, fontWeight: 700, color: '#0D1B3E' }}>{st.val}</div>
+                    <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--navy)' }}>{st.val}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{st.label}</div>
                   </div>
                 ))}
