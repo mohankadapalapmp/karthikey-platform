@@ -80,7 +80,6 @@ export default function AgentRunnerPage() {
   const [results, setResults] = useState(null)
   const [step, setStep] = useState('upload')
   const [dragOver, setDragOver] = useState(false)
-  const [prefillLoading, setPrefillLoading] = useState(false)
   const chatRef = useRef(null)
   const fileRef = useRef(null)
   const historyRef = useRef([])
@@ -102,37 +101,6 @@ export default function AgentRunnerPage() {
     if (acc) setCredits(acc.credits)
   }
 
-  // ── SMART PREFILL: analyse uploaded columns and suggest best action ──
-  async function smartPrefill(cols, rows) {
-    setPrefillLoading(true)
-    try {
-      const res = await fetch('/api/prefill', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          agentName: agent.name,
-          agentDesc: agent.desc,
-          agentKeywords: agent.keywords || [],
-          inputType: agent.inputType || 'excel',
-          columns: cols,
-          rowCount: rows,
-        })
-      })
-      const data = await res.json()
-      if (data.message) {
-        addMsg('agent', `✅ Loaded **${rows} records** with ${cols.length} columns.\n\n${data.message}`)
-      }
-      if (data.suggestedPrompt) {
-        setInput(data.suggestedPrompt)
-      }
-    } catch (e) {
-      // fallback to default message
-      addMsg('agent', `✅ Loaded **${rows} records** with ${cols.length} columns.\n\nReady to analyse. Try a quick action or ask me anything.`)
-    } finally {
-      setPrefillLoading(false)
-    }
-  }
-
   function parseFile(file) {
     const reader = new FileReader()
     reader.onload = (e) => {
@@ -140,15 +108,9 @@ export default function AgentRunnerPage() {
       const ws = wb.Sheets[wb.SheetNames[0]]
       const rows = XLSX.utils.sheet_to_json(ws, { defval: '' })
       if (rows.length) {
-        const detectedCols = Object.keys(rows[0])
-        setColumns(detectedCols); setData(rows); setStep('ready')
-        track(Events.FILE_UPLOADED, { rows: rows.length, cols: detectedCols.length })
-        if (rows.length > BATCH_SIZE) {
-          addMsg('agent', `✅ Loaded **${rows.length} records** with ${detectedCols.length} columns.\n\n📦 Large dataset detected — I'll process in batches of ${BATCH_SIZE} to ensure every record gets scored.`)
-          setInput(`Score all ${rows.length} records`)
-        } else {
-          smartPrefill(detectedCols, rows.length)
-        }
+        setColumns(Object.keys(rows[0])); setData(rows); setStep('ready')
+        track(Events.FILE_UPLOADED, { rows: rows.length, cols: Object.keys(rows[0]).length })
+        addMsg('agent', `✅ Loaded **${rows.length} records** with ${Object.keys(rows[0]).length} columns.\n\n${rows.length > BATCH_SIZE ? `📦 Large dataset detected — use "Score all ${rows.length} records" to process in batches of ${BATCH_SIZE}. This ensures every record gets scored.` : `Ready to analyse. Try a quick action or ask me anything.`}`)
       }
     }
     reader.readAsArrayBuffer(file)
@@ -164,9 +126,8 @@ export default function AgentRunnerPage() {
       { Name:'Arjun Patel', Company:'TCS', Budget:'₹45L', Source:'Meta Ads', City:'Pune', Stage:'Contacted' },
       { Name:'Kavitha Rao', Company:'Zomato', Budget:'₹90L', Source:'Referral', City:'Bengaluru', Stage:'New' },
     ]
-    const sampleCols = Object.keys(sample[0])
-    setColumns(sampleCols); setData(sample); setStep('ready')
-    smartPrefill(sampleCols, sample.length)
+    setColumns(Object.keys(sample[0])); setData(sample); setStep('ready')
+    addMsg('agent', `✅ Loaded ${sample.length} sample records. Try "Score all leads" to see the agent in action!`)
   }
 
   function addMsg(role, text, scores) {
@@ -437,7 +398,7 @@ export default function AgentRunnerPage() {
                 />
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => setShowEmailModal(false)} style={{ flex: 1, padding: '9px', border: '1px solid #D1D5DB', borderRadius: 8, background: '#fff', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-                  <button onClick={sendEmail} disabled={emailSending || !emailTo} style={{ flex: 1, padding: '9px', border: 'none', borderRadius: 8, background: '#1565C0', color: '#ffffff', fontSize: 13, fontWeight: 600, cursor: emailSending ? 'not-allowed' : 'pointer' }}>
+                  <button onClick={sendEmail} disabled={emailSending || !emailTo} style={{ flex: 1, padding: '9px', border: 'none', borderRadius: 8, background: '#0D1B3E', color: '#C9A84C', fontSize: 13, fontWeight: 600, cursor: emailSending ? 'not-allowed' : 'pointer' }}>
                     {emailSending ? 'Sending…' : 'Send email →'}
                   </button>
                 </div>
@@ -478,7 +439,7 @@ export default function AgentRunnerPage() {
                 <div onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) parseFile(f) }}
                   onDragOver={e => { e.preventDefault(); setDragOver(true) }} onDragLeave={() => setDragOver(false)}
                   onClick={() => fileRef.current?.click()}
-                  style={{ border: `1.5px dashed ${dragOver ? '#1565C0' : '#D1D5DB'}`, borderRadius: 12, padding: '32px 20px', textAlign: 'center', cursor: 'pointer', background: dragOver ? '#EFF6FF' : 'white', transition: 'all 0.12s' }}>
+                  style={{ border: `1.5px dashed ${dragOver ? 'var(--gold)' : '#D1D5DB'}`, borderRadius: 12, padding: '32px 20px', textAlign: 'center', cursor: 'pointer', background: dragOver ? '#FFFBEB' : 'white', transition: 'all 0.12s' }}>
                   <input ref={fileRef} type="file" accept=".xlsx,.csv,.xls" onChange={e => { if (e.target.files[0]) parseFile(e.target.files[0]) }} style={{ display: 'none' }} />
                   <div style={{ fontSize: 32, marginBottom: 10 }}>📂</div>
                   <div style={{ fontWeight: 500, marginBottom: 5 }}>Drop your Excel or CSV file here</div>
@@ -503,7 +464,7 @@ export default function AgentRunnerPage() {
             {/* Batch score button for large datasets */}
             {isScoringAgent && data && data.length > 0 && step === 'ready' && (
               <button onClick={runBatchScore} disabled={batchLoading}
-                style={{ width: '100%', padding: '11px', fontSize: 13, fontWeight: 600, background: batchLoading ? '#9CA3AF' : '#1565C0', color: '#ffffff', border: 'none', borderRadius: 8, cursor: batchLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                style={{ width: '100%', padding: '11px', fontSize: 13, fontWeight: 600, background: batchLoading ? '#9CA3AF' : 'var(--navy)', color: 'var(--gold)', border: 'none', borderRadius: 8, cursor: batchLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 {batchLoading
                   ? `⏳ Scoring batch ${batchProgress?.current || '...'} of ${batchProgress?.total || totalBatches}...`
                   : `🎯 Score all ${data.length} records ${data.length > BATCH_SIZE ? `· ${batchCreditCost} credit${batchCreditCost > 1 ? 's' : ''}` : `· ${agent.credits} credit`}`
@@ -586,13 +547,6 @@ export default function AgentRunnerPage() {
                     <span style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>{m.time}</span>
                   </div>
                 ))}
-                {prefillLoading && (
-                  <div style={{ alignSelf: 'flex-start', padding: '10px 14px', background: '#EFF6FF', border: '0.5px solid #BFDBFE', borderRadius: 12, borderBottomLeftRadius: 4, fontSize: 12, color: '#1D4ED8', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 10, height: 10, border: '2px solid #BFDBFE', borderTopColor: '#1565C0', borderRadius: '50%', animation: 'spin 0.7s linear infinite', flexShrink: 0 }}/>
-                    Analysing your data columns…
-                    <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-                  </div>
-                )}
                 {(loading || batchLoading) && (
                   <div style={{ alignSelf: 'flex-start', padding: '10px 14px', background: '#F9FAFB', border: '0.5px solid #E5E7EB', borderRadius: 12, borderBottomLeftRadius: 4 }}>
                     <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
