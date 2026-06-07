@@ -250,25 +250,12 @@ export default function AgentRunnerPage() {
 
   function exportEnriched() {
     if (!results || !data) return
-    // Build score map — try to match against any column value, not just col[0]
     const scoreMap = {}
-    results.forEach(r => { if (r.name) scoreMap[r.name.trim().toLowerCase()] = r })
-
-    const merged = data.map((row, idx) => {
-      // Try to find a match: check every cell value against score names
-      let match = null
-      for (const val of Object.values(row)) {
-        const key = String(val || '').trim().toLowerCase()
-        if (key && scoreMap[key]) { match = scoreMap[key]; break }
-      }
-      // Fallback: match by index order if names don't match
-      if (!match && results[idx]) match = results[idx]
-      return {
-        ...row,
-        AI_Score: match?.score ? match.score.charAt(0).toUpperCase() + match.score.slice(1) : '',
-        AI_Reason: match?.reason || '',
-        AI_Action: match?.action || '',
-      }
+    results.forEach(r => { scoreMap[r.name] = r })
+    const nameCol = columns[0]
+    const merged = data.map(row => {
+      const match = scoreMap[String(row[nameCol] || '')]
+      return { ...row, AI_Score: match?.score || '', AI_Reason: match?.reason || '', AI_Action: match?.action || '' }
     })
     const ws = XLSX.utils.json_to_sheet(merged)
     const wb = XLSX.utils.book_new()
@@ -296,297 +283,106 @@ export default function AgentRunnerPage() {
 
   function exportPDF() {
     const text = getAgentTextOutput()
-    if (!text && !results?.length) return
+    if (!text) return
     track(Events.EXPORT_PDF || 'export_pdf', { agentId })
     const doc = new jsPDF({ unit: 'pt', format: 'a4' })
-    const PW = doc.internal.pageSize.getWidth()
-    const PH = doc.internal.pageSize.getHeight()
-    const ML = 40, MR = 40
-    const CW = PW - ML - MR
-    let y = 0
+    const margin = 40
+    const pageWidth = doc.internal.pageSize.getWidth() - margin * 2
+    const lineHeight = 14
+    let y = 60
 
-    const newPage = () => { doc.addPage(); y = 48 }
-    const checkY = (needed = 20) => { if (y + needed > PH - 36) newPage() }
-
-    // ── Header bar ──────────────────────────────────────────
+    // Header
     doc.setFillColor(13, 27, 62)
-    doc.rect(0, 0, PW, 52, 'F')
-    // KARTHI in white
+    doc.rect(0, 0, doc.internal.pageSize.getWidth(), 45, 'F')
+    doc.setTextColor(201, 168, 76)
+    doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(15)
-    doc.setTextColor(255, 255, 255)
-    doc.text('KARTHI', ML, 30)
-    // KEY in light blue
-    const karW = doc.getTextWidth('KARTHI')
-    doc.setTextColor(144, 202, 249)
-    doc.text('KEY', ML + karW, 30)
-    // Agent name
-    doc.setFont('helvetica', 'normal')
+    doc.text('KARTHIKEY AI', margin, 28)
     doc.setFontSize(10)
-    doc.setTextColor(200, 220, 255)
-    doc.text(agent?.name || agentId, ML, 44)
-    // Date right-aligned
-    doc.setFontSize(8)
-    doc.setTextColor(150, 180, 220)
-    const dateStr = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })
-    doc.text(dateStr, PW - MR - doc.getTextWidth(dateStr), 44)
+    doc.setTextColor(255, 255, 255)
+    doc.text(agent?.name || agentId, margin, 40)
 
-    // ── Divider ─────────────────────────────────────────────
-    doc.setDrawColor(21, 101, 192)
-    doc.setLineWidth(1.5)
-    doc.line(0, 52, PW, 52)
+    doc.setTextColor(0, 0, 0)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
 
-    y = 72
+    // Fix rupee symbol encoding
+    const cleanText = text.replace(/₹/g, 'Rs.')
+    const lines = doc.splitTextToSize(cleanText, pageWidth)
+    lines.forEach(line => {
+      if (y > doc.internal.pageSize.getHeight() - 40) {
+        doc.addPage()
+        y = 40
+      }
+      doc.text(line, margin, y)
+      y += lineHeight
+    })
 
-    // ── Summary section ─────────────────────────────────────
+    // If results table, add it
     if (results?.length) {
-      const hot = results.filter(r => r.score?.toLowerCase() === 'hot').length
-      const warm = results.filter(r => r.score?.toLowerCase() === 'warm').length
-      const cold = results.filter(r => r.score?.toLowerCase() === 'cold').length
-      // Score summary boxes
-      const boxW = (CW - 16) / 3
-      const boxes = [
-        { label: 'HOT', count: hot, bg: [254,243,199], text: [146,64,14] },
-        { label: 'WARM', count: warm, bg: [239,246,255], text: [30,64,175] },
-        { label: 'COLD', count: cold, bg: [241,245,249], text: [71,85,105] },
-      ]
-      boxes.forEach((b, i) => {
-        const bx = ML + i * (boxW + 8)
-        doc.setFillColor(...b.bg)
-        doc.roundedRect(bx, y, boxW, 34, 4, 4, 'F')
-        doc.setTextColor(...b.text)
-        doc.setFont('helvetica', 'bold')
-        doc.setFontSize(18)
-        doc.text(String(b.count), bx + boxW/2 - doc.getTextWidth(String(b.count))/2, y + 20)
-        doc.setFontSize(7)
-        doc.text(b.label, bx + boxW/2 - doc.getTextWidth(b.label)/2, y + 30)
-      })
-      y += 46
-    }
-
-    // ── Main text ────────────────────────────────────────────
-    if (text) {
-      const cleanText = text.replace(/₹/g, 'Rs.').replace(/•/g, '-')
-      doc.setTextColor(15, 23, 42)
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(9)
-      const lines = doc.splitTextToSize(cleanText, CW)
-      lines.forEach(line => {
-        checkY(13)
-        // Bold headings
-        if (line.match(/^[A-Z][^a-z]{4,}:/) || line.match(/^(Pipeline|Immediate|Next Action)/)) {
-          doc.setFont('helvetica', 'bold')
-          doc.setTextColor(13, 27, 62)
-        } else {
-          doc.setFont('helvetica', 'normal')
-          doc.setTextColor(15, 23, 42)
-        }
-        doc.text(line, ML, y)
-        y += 13
-      })
-    }
-
-    // ── Results table ────────────────────────────────────────
-    if (results?.length) {
-      checkY(40)
+      if (y > doc.internal.pageSize.getHeight() - 80) { doc.addPage(); y = 40 }
       y += 10
-      // Table header
-      doc.setFillColor(13, 27, 62)
-      doc.rect(ML, y - 2, CW, 18, 'F')
-      doc.setTextColor(255, 255, 255)
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(8)
-      const cols = [
-        { label: 'Record', x: ML + 4, w: CW * 0.28 },
-        { label: 'Score', x: ML + CW * 0.28 + 4, w: CW * 0.08 },
-        { label: 'Reason', x: ML + CW * 0.36 + 4, w: CW * 0.36 },
-        { label: 'Next Action', x: ML + CW * 0.72 + 4, w: CW * 0.28 },
-      ]
-      cols.forEach(c => doc.text(c.label, c.x, y + 10))
-      y += 20
-
+      doc.setFontSize(10)
+      doc.text('AI Scored Results', margin, y)
+      y += 16
       doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7.5)
+      doc.setFontSize(8)
       results.forEach((r, i) => {
-        const rowH = 18
-        checkY(rowH + 4)
-        // Row bg
-        const score = (r.score || '').toLowerCase()
-        if (i % 2 === 0) {
-          doc.setFillColor(249, 250, 251)
-          doc.rect(ML, y - 2, CW, rowH, 'F')
-        }
-        // Score badge color
-        const scoreColor = score === 'hot' ? [146,64,14] : score === 'warm' ? [30,64,175] : [71,85,105]
-        const scoreBg = score === 'hot' ? [254,243,199] : score === 'warm' ? [239,246,255] : [241,245,249]
-        // Record name
-        doc.setTextColor(15, 23, 42)
-        const nameText = (r.name || '').replace(/₹/g,'Rs.').substring(0, 38)
-        doc.text(nameText, cols[0].x, y + 10)
-        // Score badge
-        doc.setFillColor(...scoreBg)
-        doc.roundedRect(cols[1].x - 2, y + 1, cols[1].w - 2, 12, 2, 2, 'F')
-        doc.setTextColor(...scoreColor)
-        doc.setFont('helvetica', 'bold')
-        doc.setFontSize(7)
-        const scoreLabel = (r.score || '').toUpperCase()
-        doc.text(scoreLabel, cols[1].x + (cols[1].w - 4)/2 - doc.getTextWidth(scoreLabel)/2, y + 10)
-        // Reason
-        doc.setFont('helvetica', 'normal')
-        doc.setFontSize(7.5)
-        doc.setTextColor(55, 65, 81)
-        const reasonText = (r.reason || '').replace(/₹/g,'Rs.').substring(0, 60)
-        doc.text(reasonText, cols[2].x, y + 10)
-        // Action
-        doc.setTextColor(21, 101, 192)
-        const actionText = (r.action || '').substring(0, 42)
-        doc.text(actionText, cols[3].x, y + 10)
-        y += rowH
+        if (y > doc.internal.pageSize.getHeight() - 40) { doc.addPage(); y = 40 }
+        doc.setFillColor(i % 2 === 0 ? 255 : 248, i % 2 === 0 ? 255 : 250, i % 2 === 0 ? 255 : 250)
+        doc.rect(margin, y - 10, pageWidth, 14, 'F')
+        doc.setTextColor(0,0,0)
+        const rLine = `${r.name || ''} | ${(r.score||'').toUpperCase()} | ${(r.reason||'').replace(/₹/g,'Rs.').substring(0,55)} | ${(r.action||'').substring(0,38)}`
+        doc.text(rLine, margin + 4, y)
+        y += 14
       })
     }
 
-    // ── Footer ───────────────────────────────────────────────
-    const totalPages = doc.internal.getNumberOfPages()
-    for (let p = 1; p <= totalPages; p++) {
-      doc.setPage(p)
-      doc.setFillColor(248, 250, 252)
-      doc.rect(0, PH - 22, PW, 22, 'F')
-      doc.setDrawColor(226, 232, 240)
-      doc.setLineWidth(0.5)
-      doc.line(0, PH - 22, PW, PH - 22)
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7)
-      doc.setTextColor(100, 116, 139)
-      doc.text('Karthikey AI · agents.karthikey.in · Confidential', ML, PH - 8)
-      doc.text(`Page ${p} of ${totalPages}`, PW - MR - 40, PH - 8)
-    }
-
-    doc.save(`karthikey_${agent?.name?.replace(/\s+/g,'-').toLowerCase() || agentId}_${new Date().toISOString().slice(0,10)}.pdf`)
+    doc.save(`karthikey_${agentId}_${new Date().toISOString().slice(0,10)}.pdf`)
   }
 
   async function exportWord() {
     const text = getAgentTextOutput()
-    if (!text && !results?.length) return
+    if (!text) return
     track(Events.EXPORT_WORD || 'export_word', { agentId })
-    const { AlignmentType, BorderStyle, ShadingType, Table, TableRow, TableCell, WidthType } = await import('docx')
-
-    const NAVY = '0D1B3E', BLUE = '1565C0', LIGHT_BLUE = 'EFF6FF'
-    const date = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })
-
-    // Score summary line
-    let scoreSummary = ''
-    if (results?.length) {
-      const hot = results.filter(r=>r.score?.toLowerCase()==='hot').length
-      const warm = results.filter(r=>r.score?.toLowerCase()==='warm').length
-      const cold = results.filter(r=>r.score?.toLowerCase()==='cold').length
-      scoreSummary = `${results.length} records scored — ${hot} Hot · ${warm} Warm · ${cold} Cold`
-    }
 
     const paragraphs = [
-      // Brand header
       new Paragraph({
-        children: [
-          new TextRun({ text: 'KARTHI', bold: true, size: 32, color: NAVY, font: 'Calibri' }),
-          new TextRun({ text: 'KEY', bold: true, size: 32, color: BLUE, font: 'Calibri' }),
-          new TextRun({ text: '  AI', bold: false, size: 24, color: '64748B', font: 'Calibri' }),
-        ],
-        spacing: { after: 80 },
-      }),
-      // Agent name as h1
-      new Paragraph({
-        text: agent?.name || agentId,
+        text: `Karthikey AI — ${agent?.name || agentId}`,
         heading: HeadingLevel.HEADING_1,
-        spacing: { after: 60 },
       }),
-      // Meta line
       new Paragraph({
-        children: [
-          new TextRun({ text: `Generated: ${date}`, size: 18, color: '64748B' }),
-          ...(scoreSummary ? [new TextRun({ text: `   ·   ${scoreSummary}`, size: 18, color: '1565C0', bold: true })] : []),
-        ],
-        spacing: { after: 240 },
+        children: [new TextRun({ text: `Generated: ${new Date().toLocaleDateString('en-IN')}`, color: '6B7280', size: 18 })]
       }),
+      new Paragraph({ text: '' }),
+      ...text.split('\n').map(line =>
+        new Paragraph({
+          children: [new TextRun({ text: line, size: 22 })]
+        })
+      )
     ]
 
-    // Main text — parse markdown-ish lines
-    if (text) {
-      text.split('\n').forEach(line => {
-        if (!line.trim()) { paragraphs.push(new Paragraph({ text: '', spacing: { after: 80 } })); return }
-        const isBullet = line.startsWith('•') || line.startsWith('-')
-        const isHeading = /^(Pipeline|Immediate|Next Action|Hot Deals|Warm Deals|Cold Deals)/.test(line)
-        if (isHeading) {
-          paragraphs.push(new Paragraph({
-            children: [new TextRun({ text: line.replace(/^[•\-]\s*/, ''), bold: true, size: 20, color: NAVY })],
-            spacing: { before: 160, after: 60 },
-          }))
-        } else if (isBullet) {
-          paragraphs.push(new Paragraph({
-            children: [new TextRun({ text: line.replace(/^[•\-]\s*/, ''), size: 20 })],
-            bullet: { level: 0 },
-            spacing: { after: 60 },
-          }))
-        } else {
-          paragraphs.push(new Paragraph({
-            children: [new TextRun({ text: line, size: 20 })],
-            spacing: { after: 60 },
-          }))
-        }
-      })
-    }
-
-    // Results table
     if (results?.length) {
-      paragraphs.push(new Paragraph({ text: '', spacing: { after: 160 } }))
-      paragraphs.push(new Paragraph({
-        text: 'AI Scored Results',
-        heading: HeadingLevel.HEADING_2,
-        spacing: { after: 120 },
-      }))
-
-      const headerCell = (label) => new TableCell({
-        children: [new Paragraph({ children: [new TextRun({ text: label, bold: true, size: 18, color: 'FFFFFF' })] })],
-        shading: { fill: NAVY, type: ShadingType.SOLID },
-        width: { size: 25, type: WidthType.PERCENTAGE },
-      })
-
-      const dataCell = (text, opts = {}) => new TableCell({
-        children: [new Paragraph({ children: [new TextRun({ text: String(text || ''), size: 17, ...opts })] })],
-        width: { size: 25, type: WidthType.PERCENTAGE },
-      })
-
-      const scoreColor = (s) => s === 'hot' ? 'DC2626' : s === 'warm' ? '2563EB' : '64748B'
-
-      const tableRows = [
-        new TableRow({ children: ['Record', 'Score', 'Reason', 'Next Action'].map(headerCell), tableHeader: true }),
-        ...results.map((r, i) => new TableRow({
+      paragraphs.push(new Paragraph({ text: '' }))
+      paragraphs.push(new Paragraph({ text: 'AI Scored Results', heading: HeadingLevel.HEADING_2 }))
+      results.forEach(r => {
+        paragraphs.push(new Paragraph({
           children: [
-            dataCell(r.name || '', {}),
-            dataCell((r.score || '').toUpperCase(), { bold: true, color: scoreColor(r.score?.toLowerCase()) }),
-            dataCell(r.reason || ''),
-            dataCell(r.action || '', { color: BLUE }),
-          ],
+            new TextRun({ text: `${r.name || ''} `, bold: true, size: 20 }),
+            new TextRun({ text: `[${r.score?.toUpperCase() || ''}] `, color: r.score === 'hot' ? 'DC2626' : r.score === 'warm' ? '2563EB' : '6B7280', size: 20 }),
+            new TextRun({ text: `${r.reason || ''} — ${r.action || ''}`, size: 20 }),
+          ]
         }))
-      ]
-
-      paragraphs.push(new Table({
-        rows: tableRows,
-        width: { size: 100, type: WidthType.PERCENTAGE },
-      }))
+      })
     }
-
-    // Footer paragraph
-    paragraphs.push(new Paragraph({ text: '', spacing: { before: 400 } }))
-    paragraphs.push(new Paragraph({
-      children: [new TextRun({ text: 'Karthikey AI  ·  agents.karthikey.in  ·  Confidential', size: 16, color: '94A3B8' })],
-      alignment: AlignmentType.CENTER,
-    }))
 
     const doc = new Document({ sections: [{ properties: {}, children: paragraphs }] })
     const blob = await Packer.toBlob(doc)
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `karthikey_${agent?.name?.replace(/\s+/g,'-').toLowerCase() || agentId}_${new Date().toISOString().slice(0,10)}.docx`
+    a.download = `karthikey_${agentId}_${new Date().toISOString().slice(0,10)}.docx`
     a.click()
     URL.revokeObjectURL(url)
   }
