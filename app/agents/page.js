@@ -98,28 +98,13 @@ export default function AgentsPage() {
     if (!query || query.trim().length < 3) { setNlResults(null); setNlError(false); return }
     setNlLoading(true); setNlError(false)
     try {
-      const agentList = AGENTS.map(a =>
-        `id:${a.id} | name:${a.name} | dept:${a.dept} | desc:${a.desc} | keywords:${(a.keywords||[]).join(',')}`)
-        .join('\n')
-
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        const res = await fetch('/api/agent-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          system: 'You are an AI agent search assistant for Karthikey, a CRM & sales AI platform. Given a user query, return the most relevant agents from the list. Respond ONLY with a JSON array, no markdown, no explanation. Each item: {"id":"agent-id","reason":"one short sentence why this matches"}. Return max 8 results, ordered by relevance. If nothing matches well, return [].',
-          messages: [{ role: 'user', content: `Query: "${query}"\n\nAgents:\n${agentList}` }]
-        })
+        body: JSON.stringify({ query })
       })
       const data = await res.json()
-      const text = data?.content?.[0]?.text || '[]'
-      const matches = JSON.parse(text.replace(/```json|```/g, '').trim())
-      // Enrich with full agent data
-      const enriched = matches
-        .map(m => ({ ...AGENTS.find(a => a.id === m.id), reason: m.reason }))
-        .filter(Boolean)
-      setNlResults(enriched)
+      setNlResults(data.results || [])
     } catch (e) {
       console.error('NL search failed, falling back to keyword', e)
       setNlError(true)
@@ -250,7 +235,7 @@ export default function AgentsPage() {
               }
               <input
                 value={search}
-                onChange={e => { setSearch(e.target.value); if (!e.target.value) { setNlResults(null); setNlError(false) } }}
+                onChange={e => { setSearch(e.target.value); if (e.target.value) { setDept('All') } else { setNlResults(null); setNlError(false) } }}
                 placeholder="Search agents... (try: 'score my leads')"
                 style={{border:'none', outline:'none', background:'transparent', fontSize:13, color:'#1E293B', width:'100%', fontFamily:'inherit'}}
               />
