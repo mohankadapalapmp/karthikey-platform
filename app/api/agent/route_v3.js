@@ -63,40 +63,6 @@ function cleanReplyText(raw) {
   return raw.replace(/```json[\s\S]*?```/g,'').replace(/```[\s\S]*?```/g,'').replace(/\{"scores"\s*:\s*\[[\s\S]*?\]\s*\}/g,'').trim()
 }
 
-// ── OUTPUT SUMMARISER: 2-sentence actionable insight ─────────
-async function generateSummary(agentName, agentDept, reply, scores, apiKey) {
-  try {
-    const scoreContext = scores?.length
-      ? `Scored ${scores.length} records: ${scores.filter(s=>s.score?.toLowerCase()==='hot').length} Hot, ${scores.filter(s=>s.score?.toLowerCase()==='warm').length} Warm, ${scores.filter(s=>s.score?.toLowerCase()==='cold').length} Cold. Top result: ${scores[0]?.name} (${scores[0]?.score}) — ${scores[0]?.reason}`
-      : ''
-    const prompt = `You are a ${agentName} AI agent (${agentDept} department).
-
-Agent output:
-${reply.slice(0, 800)}
-${scoreContext}
-
-Write EXACTLY 2 sentences for a "What this means for you" summary card:
-- Sentence 1: The single most important insight from this output
-- Sentence 2: The one action they should take right now
-
-Be specific, use numbers if available. No fluff. No markdown.`
-
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 120,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    })
-    const data = await res.json()
-    return data?.content?.[0]?.text?.trim() || null
-  } catch (e) {
-    return null
-  }
-}
-
 function calcCredits(agent, rowCount) {
   const batches = Math.ceil(rowCount / BATCH_SIZE)
   const isScoring = ['lead-qual','lead-score','case-class','sentiment','pipeline','crm-hygiene','data-qual','quote-rev','renewal'].includes(agent.id)
@@ -199,9 +165,6 @@ export async function POST(req) {
       cleanReply += cleanReplyText(rawReply)
     }
 
-    // ── Output summary (parallel, non-blocking) ─────────────
-    const summary = await generateSummary(agent.name, agent.dept, cleanReply, scores, process.env.ANTHROPIC_API_KEY)
-
     // ── Deduct credits ────────────────────────────────────────
     if (useOrgCredits) {
       // Deduct from org pool
@@ -218,7 +181,7 @@ export async function POST(req) {
       org_id: orgId
     })
 
-    return Response.json({ reply: cleanReply, scores, summary, creditCost, totalRows: rowCount, usedOrgCredits: useOrgCredits, remainingCredits: useOrgCredits ? orgCredits - creditCost : personalCredits - creditCost })
+    return Response.json({ reply: cleanReply, scores, creditCost, totalRows: rowCount, usedOrgCredits: useOrgCredits, remainingCredits: useOrgCredits ? orgCredits - creditCost : personalCredits - creditCost })
   } catch (err) {
     console.error(err)
     return Response.json({ error: err.message }, { status: 500 })

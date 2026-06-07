@@ -172,8 +172,8 @@ export default function AgentRunnerPage() {
     smartPrefill(sampleCols, sample.length)
   }
 
-  function addMsg(role, text, scores, summary) {
-    setMessages(prev => [...prev, { role, text, scores, summary, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }])
+  function addMsg(role, text, scores) {
+    setMessages(prev => [...prev, { role, text, scores, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }])
   }
 
   // ── BATCH SCORE: score all records in batches ────────────────
@@ -201,7 +201,7 @@ export default function AgentRunnerPage() {
       setBatchLoading(false); setBatchProgress(null)
       if (json.error) { addMsg('agent', `⚠️ ${json.error}`); return }
       if (json.scores?.length) setResults(json.scores)
-      addMsg('agent', json.reply, json.scores, json.summary)
+      addMsg('agent', json.reply, json.scores)
       setCredits(c => c - (json.creditCost || agent.credits))
     } catch (e) {
       setBatchLoading(false); setBatchProgress(null)
@@ -231,7 +231,7 @@ export default function AgentRunnerPage() {
       const reply = json.reply; const scores = json.scores
       historyRef.current.push({ role: 'assistant', content: reply })
       if (scores?.length) setResults(scores)
-      addMsg('agent', reply, scores, json.summary)
+      addMsg('agent', reply, scores)
       setCredits(c => c - (json.creditCost || agent.credits))
     } catch (e) {
       setLoading(false)
@@ -570,16 +570,7 @@ export default function AgentRunnerPage() {
                 )}
                 {messages.map((m, i) => (
                   <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '90%', alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                    {m.role === 'agent' && m.summary && (
-                      <div style={{ background: 'linear-gradient(135deg, #EFF6FF, #F0FDF4)', border: '1px solid #BFDBFE', borderRadius: 10, padding: '10px 14px', marginBottom: 6, maxWidth: '100%' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="#1565C0"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: '#1565C0', letterSpacing: '0.06em', textTransform: 'uppercase' }}>What this means for you</span>
-                        </div>
-                        <p style={{ fontSize: 12, color: '#0F172A', lineHeight: 1.6, margin: 0 }}>{m.summary}</p>
-                      </div>
-                    )}
-                    <div style={{ padding: '9px 13px', borderRadius: 12, fontSize: 12, lineHeight: 1.6, background: m.role === 'user' ? '#1565C0' : '#F9FAFB', color: m.role === 'user' ? '#fff' : 'var(--text)', border: m.role === 'agent' ? '0.5px solid #E5E7EB' : 'none', borderBottomRightRadius: m.role === 'user' ? 4 : 12, borderBottomLeftRadius: m.role === 'agent' ? 4 : 12 }}>
+                    <div style={{ padding: '9px 13px', borderRadius: 12, fontSize: 12, lineHeight: 1.6, background: m.role === 'user' ? 'var(--navy)' : '#F9FAFB', color: m.role === 'user' ? '#fff' : 'var(--text)', border: m.role === 'agent' ? '0.5px solid #E5E7EB' : 'none', borderBottomRightRadius: m.role === 'user' ? 4 : 12, borderBottomLeftRadius: m.role === 'agent' ? 4 : 12 }}>
                       {m.role === 'agent' ? <AgentMessage text={m.text} /> : m.text}
                     </div>
                     {m.role === 'agent' && m.scores?.length > 0 && (
