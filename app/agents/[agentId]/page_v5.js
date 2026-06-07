@@ -126,11 +126,8 @@ export default function AgentRunnerPage() {
         setInput(data.suggestedPrompt)
       }
     } catch (e) {
-      console.error('Prefill failed:', e)
-      // fallback: still useful, pre-fill with best quick action
-      const fallbackPrompt = agent.quickActions?.[0] || ''
-      addMsg('agent', `✅ Loaded **${rows} records** with ${cols.length} columns (${cols.slice(0,4).join(', ')}${cols.length > 4 ? '…' : ''}).\n\nReady to analyse — try asking me anything about your data.`)
-      if (fallbackPrompt) setInput(fallbackPrompt)
+      // fallback to default message
+      addMsg('agent', `✅ Loaded **${rows} records** with ${cols.length} columns.\n\nReady to analyse. Try a quick action or ask me anything.`)
     } finally {
       setPrefillLoading(false)
     }
