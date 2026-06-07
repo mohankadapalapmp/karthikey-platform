@@ -181,13 +181,13 @@ export default function AgentsPage() {
         {/* Topbar */}
         <header style={S.topbar}>
           <div style={S.breadcrumb}>
-            <Link href="/" style={{color:'#64748B', textDecoration:'none', fontSize:13, fontWeight:500, padding:'4px 10px', borderRadius:5, transition:'background 0.12s'}}
-              onMouseEnter={e=>e.currentTarget.style.background='#F1F5F9'}
+            <Link href="/" style={{color:'rgba(255,255,255,0.55)', textDecoration:'none', fontSize:13, padding:'4px 8px', borderRadius:5, transition:'background 0.12s'}}
+              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.08)'}
               onMouseLeave={e=>e.currentTarget.style.background='transparent'}>Home</Link>
-            <Link href="/dashboard" style={{color:'#64748B', textDecoration:'none', fontSize:13, fontWeight:500, padding:'4px 10px', borderRadius:5, transition:'background 0.12s'}}
-              onMouseEnter={e=>e.currentTarget.style.background='#F1F5F9'}
+            <Link href="/dashboard" style={{color:'rgba(255,255,255,0.55)', textDecoration:'none', fontSize:13, padding:'4px 8px', borderRadius:5, transition:'background 0.12s'}}
+              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.08)'}
               onMouseLeave={e=>e.currentTarget.style.background='transparent'}>Dashboard</Link>
-            <span style={{color:'#CBD5E1', fontSize:12}}>›</span>
+            <span style={{color:'rgba(255,255,255,0.2)', fontSize:12}}>›</span>
             <span style={{...S.breadcrumbActive}}>Agent Marketplace</span>
           </div>
           <div style={S.topbarRight}>
