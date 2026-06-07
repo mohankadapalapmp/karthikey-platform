@@ -50,16 +50,15 @@ export default function AcceptInvitePage() {
       // Auto-accept immediately
       setTimeout(async () => {
         try {
-          // Upsert — handles re-invites and previously removed members
-          const { error: memberErr } = await supabase.from('org_members').upsert({
+          const { error: memberErr } = await supabase.from('org_members').insert({
             org_id: inv.org_id,
             user_id: currentUser.id,
             role: inv.role,
             status: 'active',
             invited_email: inv.email
-          }, { onConflict: 'org_id,user_id', ignoreDuplicates: false })
-          if (memberErr) {
-            console.error('Member upsert error:', memberErr)
+          })
+          if (memberErr && !memberErr.code?.includes('23505') && !memberErr.message?.includes('duplicate')) {
+            console.error('Member insert error:', memberErr)
             return
           }
           await supabase.from('org_invites').update({ status: 'accepted' }).eq('token', token)
@@ -83,16 +82,22 @@ export default function AcceptInvitePage() {
       if (!freshUser) throw new Error('Session expired — please sign in again.')
 
       // Add to org_members
-      // Upsert — handles re-invites and previously removed members
-      const { error: memberErr } = await supabase.from('org_members').upsert({
+      const { error: memberErr } = await supabase.from('org_members').insert({
         org_id: invite.org_id,
         user_id: freshUser.id,
         role: invite.role,
         status: 'active',
         invited_email: invite.email
-      }, { onConflict: 'org_id,user_id', ignoreDuplicates: false })
+      })
 
       if (memberErr) {
+        // If duplicate, they're already a member — treat as success
+        if (memberErr.message.includes('duplicate') || memberErr.code === '23505') {
+          await supabase.from('org_invites').update({ status: 'accepted' }).eq('token', token)
+          setDone(true)
+          setTimeout(() => router.push(`/org/${org.slug}`), 2000)
+          return
+        }
         throw memberErr
       }
 
