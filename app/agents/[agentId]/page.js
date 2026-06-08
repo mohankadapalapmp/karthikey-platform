@@ -42,11 +42,11 @@ const CONTEXT_BRIDGE = {
 }
 
 function getContextBridge(fromId, toId, ctx) {
-  const key = \`\${fromId}->\${toId}\`
+  const key = `${fromId}->${toId}`
   const fn = CONTEXT_BRIDGE[key]
   if (fn) return fn(ctx)
   // Generic fallback
-  if (ctx?.summary) return \`Context from ${ctx.agentName || 'previous agent'}: \${ctx.summary}\`
+  if (ctx?.summary) return `Context from ${ctx.agentName || 'previous agent'}: ${ctx.summary}`
   return null
 }
 
@@ -952,7 +952,7 @@ export default function AgentRunnerPage() {
                   <button key={nextId}
                     onClick={() => {
                       saveAgentContext()
-                      router.push(\`/agents/\${nextId}\`)
+                      router.push('/agents/' + nextId)
                     }}
                     style={{ textAlign: 'left', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 10, padding: '12px 14px', cursor: 'pointer', transition: 'all 0.12s', display: 'flex', flexDirection: 'column', gap: 5 }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = '#93C5FD'; e.currentTarget.style.background = '#F8FBFF' }}
