@@ -448,34 +448,13 @@ export default function AgentRunnerPage() {
     doc.save(`karthikey_${agent.name.replace(/\s+/g,'-').toLowerCase()}_${new Date().toISOString().slice(0,10)}.pdf`)
   }
 
-  // ── Word doc — server-side ────────────────────────────────────
+  // ── Word doc ─────────────────────────────────────────────────
   async function exportWord() {
     const text = getAgentTextOutput()
     const summary = getLastSummary()
     if (!text && !results?.length) return
     track(Events.EXPORT_WORD || 'export_word', { agentId })
-    try {
-      const res = await fetch('/api/export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'word',
-          agentName: agent.name,
-          date: new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }),
-          summary,
-          narrative: text,
-          scores: results || [],
-        })
-      })
-      if (!res.ok) throw new Error('Export failed')
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a'); a.href = url
-      a.download = `karthikey_${agent.name.replace(/\s+/g,'-').toLowerCase()}_${new Date().toISOString().slice(0,10)}.docx`
-      a.click(); URL.revokeObjectURL(url); return
-    } catch(e) { console.error('Server Word export failed:', e) }
 
-    // Fallback client-side ───────────────────────────────────────
     const NAVY = '0D1B3E', BLUE = '1565C0', LTBLUE = 'EFF6FF', GRAY = '64748B'
     const date = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })
     const hot = results?.filter(r => r.score?.toLowerCase() === 'hot').length || 0
