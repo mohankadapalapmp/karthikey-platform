@@ -21,36 +21,6 @@ const SCORE_COLORS = {
   cold: { bg: '#F1F5F9', color: '#475569', border: '#CBD5E1' },
 }
 
-// ── Context bridge: what to say when arriving from another agent ──
-const CONTEXT_BRIDGE = {
-  'lead-qual->email-draft':   (ctx) => `I can see you just scored ${ctx.scores?.length || 'your'} leads. I'll focus on the ${ctx.scores?.filter(s=>s.score?.toLowerCase()==='hot').length || 'hot'} Hot leads — drafting personalised follow-up emails for each. Ready to start?`,
-  'lead-qual->pipeline':      (ctx) => `Based on your lead scoring, I can see deal distribution across stages. Let me analyse pipeline health and flag any stalls.`,
-  'lead-qual->contact-enr':   (ctx) => `I'll enrich the ${ctx.scores?.filter(s=>s.score?.toLowerCase()==='hot').length || 'hot'} Hot leads with LinkedIn, email and company data to strengthen your outreach.`,
-  'pipeline->forecast':       (ctx) => `Using your pipeline data, I'll build a bottoms-up revenue forecast with confidence intervals for this quarter.`,
-  'pipeline->deal-coach':     (ctx) => `I can see your pipeline deals. Let me give MEDDIC-based coaching on your highest priority opportunities.`,
-  'pipeline->mgr-dash':       (ctx) => `I'll turn your pipeline data into a manager digest — performance summary, stalls, and team priorities for this week.`,
-  'email-draft->pipeline':    (ctx) => `After drafting your emails, let me check your full pipeline health and flag deals that need attention.`,
-  'email-draft->call-sum':    (ctx) => `Ready to summarise your call notes and extract action items to log into your CRM.`,
-  'forecast->mgr-dash':       (ctx) => `Using your forecast data, I'll create a manager-ready digest with pipeline summary and rep priorities.`,
-  'call-sum->email-draft':    (ctx) => `Based on your call summary and action items, I'll draft the follow-up emails for each contact.`,
-  'call-sum->deal-coach':     (ctx) => `I've reviewed your call notes. Let me give next-step coaching for each opportunity discussed.`,
-  'acct-res->email-draft':    (ctx) => `Using the account intelligence I just gathered, I'll draft highly personalised outreach for each account.`,
-  'case-class->response':     (ctx) => `Cases are classified. I'll draft empathetic, policy-compliant replies for the high-priority ones first.`,
-  'churn-risk->response':     (ctx) => `I can see your at-risk accounts. Let me draft personalised retention outreach for each one.`,
-  'crm-hygiene->contact-enr': (ctx) => `After the hygiene audit, I'll enrich the records with missing fields to bring your data up to standard.`,
-  'data-qual->contact-enr':   (ctx) => `Based on the audit, I'll fill the missing fields in your flagged records using public sources.`,
-}
-
-function getContextBridge(fromId, toId, ctx) {
-  const key = \`\${fromId}->\${toId}\`
-  const fn = CONTEXT_BRIDGE[key]
-  if (fn) return fn(ctx)
-  // Generic fallback
-  if (ctx?.summary) return \`Context from ${ctx.agentName || 'previous agent'}: \${ctx.summary}\`
-  return null
-}
-
-
 function ScoreBadge({ score }) {
   const c = SCORE_COLORS[(score||'').toLowerCase()] || SCORE_COLORS.cold
   return <span style={{ background: c.bg, color: c.color, border: `0.5px solid ${c.border}`, padding: '2px 9px', borderRadius: 12, fontSize: 11, fontWeight: 600 }}>{score}</span>
@@ -121,26 +91,6 @@ export default function AgentRunnerPage() {
       setUser(d.session.user); setSession(d.session)
       fetchCredits(d.session.user.id)
     })
-    // Check if arriving from another agent with context
-    try {
-      const raw = sessionStorage.getItem('karthikey_agent_context')
-      if (raw) {
-        const ctx = JSON.parse(raw)
-        // Only use if fresh (within 10 mins) and from a different agent
-        if (ctx.agentId !== agentId && Date.now() - ctx.timestamp < 600000) {
-          const bridge = getContextBridge(ctx.agentId, agentId, ctx)
-          if (bridge) {
-            setTimeout(() => addMsg('agent', bridge), 300)
-          }
-          // Pre-load scores as context if available
-          if (ctx.scores?.length) {
-            sessionStorage.setItem('karthikey_incoming_context', raw)
-          }
-        }
-        // Clear after reading
-        sessionStorage.removeItem('karthikey_agent_context')
-      }
-    } catch(e) {}
   }, [])
 
   useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight }, [messages])
@@ -208,22 +158,6 @@ export default function AgentRunnerPage() {
     smartPrefill(sampleCols, sample.length)
   }
 
-
-  // ── Save run context for next agent ──────────────────────────
-  function saveAgentContext(replyText, runScores, runSummary) {
-    try {
-      const ctx = {
-        agentId,
-        agentName: agent.name,
-        summary: runSummary || getLastSummary(),
-        scores: runScores || results || [],
-        narrative: replyText || getAgentTextOutput(),
-        timestamp: Date.now(),
-      }
-      sessionStorage.setItem('karthikey_agent_context', JSON.stringify(ctx))
-    } catch(e) {}
-  }
-
   function addMsg(role, text, scores, summary) {
     setMessages(prev => [...prev, { role, text, scores, summary, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }])
   }
@@ -277,7 +211,6 @@ export default function AgentRunnerPage() {
       if (json.scores?.length) setResults(json.scores)
       addMsg('agent', json.reply, json.scores, json.summary)
       setCredits(c => c - (json.creditCost || agent.credits))
-      saveAgentContext(json.reply, json.scores, json.summary)
     } catch (e) {
       setLoading(false)
       addMsg('agent', '⚠️ Connection error. Please try again.')
@@ -928,51 +861,6 @@ export default function AgentRunnerPage() {
               <button onClick={exportPDF} style={{ border: '0.5px solid #D1D5DB', borderRadius: 7, padding: '7px 14px', fontSize: 12, background: '#fff', cursor: 'pointer', color: '#374151' }}>📄 PDF report</button>
               <button onClick={exportWord} style={{ border: '0.5px solid #D1D5DB', borderRadius: 7, padding: '7px 14px', fontSize: 12, background: '#fff', cursor: 'pointer', color: '#374151' }}>📝 Word doc</button>
               <button onClick={() => setShowEmailModal(true)} style={{ border: '0.5px solid #D1D5DB', borderRadius: 7, padding: '7px 14px', fontSize: 12, background: '#fff', cursor: 'pointer', color: '#374151' }}>✉️ Email</button>
-            </div>
-          </section>
-        )}
-
-
-        {/* ── STEP 5: Suggested next agents ───────────────────── */}
-        {results && results.length > 0 && agent.nextAgents?.length > 0 && (
-          <section style={{ marginTop: 8 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
-              ⚡ Run next
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
-              {agent.nextAgents.slice(0,3).map(nextId => {
-                const nextAgent = AGENTS.find(a => a.id === nextId)
-                if (!nextAgent) return null
-                const bridge = getContextBridge(agentId, nextId, {
-                  agentName: agent.name,
-                  summary: getLastSummary(),
-                  scores: results,
-                })
-                return (
-                  <button key={nextId}
-                    onClick={() => {
-                      saveAgentContext()
-                      router.push(\`/agents/\${nextId}\`)
-                    }}
-                    style={{ textAlign: 'left', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 10, padding: '12px 14px', cursor: 'pointer', transition: 'all 0.12s', display: 'flex', flexDirection: 'column', gap: 5 }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#93C5FD'; e.currentTarget.style.background = '#F8FBFF' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#E2E8F0'; e.currentTarget.style.background = '#fff' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                      <span style={{ fontSize: 18 }}>{nextAgent.icon}</span>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: '#0F172A' }}>{nextAgent.name}</div>
-                        <div style={{ fontSize: 10, color: '#64748B' }}>{nextAgent.dept} · {nextAgent.credits} credit{nextAgent.credits > 1 ? 's' : ''}</div>
-                      </div>
-                      <span style={{ marginLeft: 'auto', fontSize: 16, color: '#93C5FD' }}>→</span>
-                    </div>
-                    {bridge && (
-                      <div style={{ fontSize: 11, color: '#1D4ED8', background: '#EFF6FF', borderRadius: 6, padding: '5px 8px', lineHeight: 1.45 }}>
-                        {bridge.length > 100 ? bridge.slice(0,97) + '…' : bridge}
-                      </div>
-                    )}
-                  </button>
-                )
-              })}
             </div>
           </section>
         )}
